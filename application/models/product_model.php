@@ -8,6 +8,10 @@ class product_model extends Orm {
 	    'id' => 'int',
 	    'price' => 'float'
 	);
+	public static $relation = array(
+		'product_image' => array('has_one', 'product_image', 'produit_id', 'id'),
+		'product_comment' => array('has_may', 'product_comment', 'produit_id', 'id')
+	);
 }
 
 // ------------------------------------------------------------------------
