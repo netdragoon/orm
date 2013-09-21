@@ -1,6 +1,6 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Modelgenerator extends CI_Controller {
+class Generator extends CI_Controller {
 
 	private $model = '';
 
@@ -125,5 +125,5 @@ class Modelgenerator extends CI_Controller {
 
 }
 
-/* End of file model.php */
-/* Location: ./application/controllers/model.php */
+/* End of file Generator.php */
+/* Location: ./application/controllers/Generator.php */

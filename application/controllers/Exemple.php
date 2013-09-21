@@ -1,10 +1,11 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Test extends CI_Controller {
+class Exemple extends CI_Controller {
 	
 	public function __construct() {
 		parent::__construct();
 		
+		$this->load->database();
 		$this->load->library('orm');
 	}
 	
@@ -37,5 +38,5 @@ class Test extends CI_Controller {
 
 }
 
-/* End of file test.php */
-/* Location: ./application/controllers/test.php */
+/* End of file Exemple.php */
+/* Location: ./application/controllers/Exemple.php */
