@@ -9,14 +9,29 @@ class Test extends CI_Controller {
 	}
 	
 	public function index() {
-				
-		$product = new product_model();	
-			
-		$products = $product->find();
-			
-		foreach ($products as $product) {
-			$product->price = 10.10;
-			$product->save();
+		
+		// Exemple 1
+		$product = new product_model(1);			
+		$product->price = 10.10;
+		$product->save();
+		
+		// Exemple 2
+		$product = new product_model();
+		$product->where('id', 1)->find_one();
+		$product->price = 10.10;
+		$product->save();
+		
+		// Exemple 3
+		$product = new product_model(3);			
+		$image = $product->product_image->find();
+		echo $image->file;
+		
+		// Exemple 4
+		$product = new product_model(3);			
+		$comments = $product->product_comment->find();
+		
+		foreach ($comments as $comment) {
+			echo $comment->title;
 		}
 	}
 
