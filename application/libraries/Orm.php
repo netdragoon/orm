@@ -1,4 +1,4 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
  * SAG ORM (objet relationnel mapping)
@@ -78,7 +78,7 @@ class Orm {
 	 * @return \Orm
 	 */
 	protected function data($data = NULL) {
-		if (!is_array($data))
+		if ( ! is_array($data))
 			return;
 
 		foreach ($data as $field => $value) {
@@ -282,7 +282,7 @@ class Orm {
 		if (self::$cache)
 			self::$CI->cache->delete(static::$table);
 
-		if (isset($this->{static::$primary_key}) && !empty($this->{static::$primary_key}) && $force_insert === FALSE) {
+		if (isset($this->{static::$primary_key}) && ! empty($this->{static::$primary_key}) && $force_insert === FALSE) {
 			return self::$CI->db
 				->where(static::$primary_key, $this->{static::$primary_key})
 				->update(static::$table, get_object_vars($this));
@@ -302,7 +302,7 @@ class Orm {
 		if (count(get_object_vars($this)) > 0)
 			return FALSE;
 
-		if (!isset($this->{static::$primary_key}) || empty($this->{static::$primary_key}))
+		if ( ! isset($this->{static::$primary_key}) || empty($this->{static::$primary_key}))
 			return FALSE;
 
 		if (self::$cache)
@@ -335,10 +335,10 @@ class Orm {
 	 * @return boolean|\class
 	 */
 	public function __get($get) {
-		if (!property_exists(static::$table.'_model', 'relations'))
+		if ( ! property_exists(static::$table.'_model', 'relations'))
 			return FALSE;
 		
-		if (!isset(static::$relations[$get][0]))
+		if ( ! isset(static::$relations[$get][0]))
 			return FALSE;
 
 		$class = static::$relations[$get][1].'_model';
