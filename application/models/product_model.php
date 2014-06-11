@@ -12,6 +12,12 @@ class product_model extends Orm {
 		'product_image' => array('has_one', 'product_image', 'produit_id', 'id'),
 		'product_comment' => array('has_may', 'product_comment', 'produit_id', 'id')
 	);
+	
+	//--START_PERSISTANT_CODE
+	
+	// Votre code
+	
+	//--END_PERSISTANT_CODE
 }
 
 // ------------------------------------------------------------------------

@@ -4,7 +4,7 @@
  * Permet le chargement automatique des modèles
  * @param string $class
  */
-function __autoload($class) {
+function orm_autoload($class) {
 	if (strstr($class, '_model') !== FALSE) {
 		$file_path = FCPATH.APPPATH.'models/'.$class.'.php';
 								
@@ -12,6 +12,8 @@ function __autoload($class) {
 			include_once($file_path);
 	}
 }
+
+spl_autoload_register('orm_autoload');
 
 // ------------------------------------------------------------------------
 
