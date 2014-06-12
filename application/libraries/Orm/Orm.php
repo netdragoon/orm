@@ -31,7 +31,7 @@ class Orm {
 	 * Constructeur
 	 * @param array $config
 	 */
-	function __construct(array $config) {
+	function __construct(array $config = array()) {
 		// Initialise la configuration, si elle existe
 		if (isset($config['orm']))
 			self::$config = array_merge(self::$config, $config['orm']);
