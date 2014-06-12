@@ -7,7 +7,7 @@
  * @link https://github.com/maltyxx/sag-orm
  * @version 2.9 (20140611)
  */
-class Orm_model extends Orm {	
+final class Orm_model extends Orm {
 	/**
 	 * Constructeur
 	 * @param NULL|int|array $data

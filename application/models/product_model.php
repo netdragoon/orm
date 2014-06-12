@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class product_model extends Orm {
+class product_model extends Orm_model {
 
 	public static $table = 'product';
 	public static $primary_key = 'id';
