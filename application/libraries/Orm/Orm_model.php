@@ -14,18 +14,30 @@ class Orm_model extends Orm {
 	 * @return object|
 	 */
 	function __construct($data = NULL) {
+						
+		// Créer les variables de l'objet
+		$this->_generate_variable();
 		
-		// Initialise le contruct parent			
-		parent::__construct((is_array($data)) ? $data : array());
-				
 		// Si la variable $data est un entier, c'est une clé primaire
 		if (is_numeric($data)) {
-			return $this->where(static::$primary_key, (int) $data)->find_one();
+			return $this->where(static::$primary_key, (int)$data)->find_one();
 			
 		// Si la variable $data est une instance de la classe Orm_association
 		} else if ($data instanceof Orm_association) {
 			$this->association($data);
 		}
+	}
+	
+	/**
+	 * Créer les variables dans le modèle
+	 * @return
+	 */
+	protected function _generate_variable() {		
+		if (count(get_object_vars($this)) > 0)
+			return;
+
+		foreach (static::$fields as $field => $type)
+			$this->{$field} = NULL;
 	}
 		
 	private function _output() {
@@ -59,7 +71,7 @@ class Orm_model extends Orm {
 		
 		if (parent::$config['encryption_enable'])
 			$vector_value = ( ! empty($data['vector'])) ? $data['vector'] : random_string('unique');
-
+		
 		// on boucle sur tous les champs de la table
 		foreach ($data as $name => $value) {
 			
@@ -89,24 +101,26 @@ class Orm_model extends Orm {
 		
 		return $input;
 	}
-	
+		
 	/**
-	 * Caste une variable
+	 * Modifie une variable
 	 * @param mixe $name
 	 * @param mixe $value
 	 */
 	public function __set($name, $value) {
-		$this->_cast_field(new Orm_field(array(
-			'name' => $name,
-			'value' => $value,
-			'type' => static::$fields[$name]
-		)));
+		if (isset(static::$fields[$name])) {
+			$this->_cast_field(new Orm_field(array(
+				'name' => $name,
+				'value' => $value,
+				'type' => static::$fields[$name]
+			)));
+		}
     }
 	
 	/**
 	 * Caste un tableau de variables
 	 * @param NULL|string $data
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	private function _cast_fields(array $data) {
 		foreach ($data as $name => $value) {
@@ -133,7 +147,7 @@ class Orm_model extends Orm {
 	 * @param mixe $key
 	 * @param NULL|string|int|float $value
 	 * @param boolean $escape
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function where($key, $value = NULL, $escape = TRUE) {
 		parent::$CI->db->where($key, $value, $escape);
@@ -146,7 +160,7 @@ class Orm_model extends Orm {
 	 * @param mixe $key
 	 * @param NULL|string|int|float $value
 	 * @param boolean $escape
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function where_in($key = NULL, $values = NULL) {
 		parent::$CI->db->where_in($key, $values);
@@ -159,7 +173,7 @@ class Orm_model extends Orm {
 	 * @param mixe $field
 	 * @param string $match
 	 * @param string $side
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function like($field, $match = '', $side = 'both') {
 		parent::$CI->db->like($field, $match, $side);
@@ -170,7 +184,7 @@ class Orm_model extends Orm {
 	/**
 	 * Group by
 	 * @param string $by
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function group_by($by) {
 		parent::$CI->db->group_by($by);
@@ -183,7 +197,7 @@ class Orm_model extends Orm {
 	 * @param string $key
 	 * @param string $value
 	 * @param boolean $escape
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function having($key, $value = '', $escape = TRUE) {
 		parent::$CI->db->having($key, $value, $escape);
@@ -195,7 +209,7 @@ class Orm_model extends Orm {
 	 * Order by
 	 * @param string $orderby
 	 * @param string $direction
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function order_by($orderby, $direction = '') {
 		parent::$CI->db->order_by($orderby, $direction);
@@ -207,7 +221,7 @@ class Orm_model extends Orm {
 	 * Lmit
 	 * @param string $value
 	 * @param string $offset
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function limit($value, $offset = '') {
 		parent::$CI->db->limit($value, $offset);
@@ -236,15 +250,15 @@ class Orm_model extends Orm {
 
 		// Si le cache est activé
 		if (parent::$config['cache']) {
-			$cache_id = static::$table;
+			$cache_id = 'orm_'.static::$table;
 			$cache_key = md5(parent::$CI->db->_compile_select());
-
+			
 			// Vérifie si le cache existe
-			if (!$data = parent::$CI->cache->get($cache_id) OR ! isset($data[$cache_key])) {
+			if ( ! $data = parent::$CI->cache->get($cache_id) OR ! isset($data[$cache_key])) {
 				$data = (is_array($data)) ? $data : array();
 
 				$data[$cache_key] = parent::$CI->db->get()->result_array();
-
+				
 				parent::$CI->cache->save($cache_id, $data, parent::$config['tts']);
 			}
 
@@ -301,8 +315,12 @@ class Orm_model extends Orm {
 		if (count(get_object_vars($this)) === 0)
 			return FALSE;
 		
-		if (parent::$config['cache'])
-			parent::$CI->cache->delete(static::$table);
+		if (parent::$config['cache']) {
+			$file = 'orm_'.static::$table;
+
+			if (file_exists(APPPATH.'cache/'.$file))
+				parent::$CI->cache->delete($file);
+		}
 
 		parent::$CI->db->from(static::$table);
 
@@ -327,13 +345,17 @@ class Orm_model extends Orm {
 
 		if ( ! isset($this->{static::$primary_key}) || empty($this->{static::$primary_key}))
 			return FALSE;
+		
+		if (parent::$config['cache']) {
+			$file = 'orm_'.static::$table;
 
-		if (parent::$config['cache'])
-			parent::$CI->cache->delete(static::$table);
+			if (file_exists(APPPATH.'cache/'.$file))
+				parent::$CI->cache->delete($file);
+		}
 
 		return parent::$CI->db
-				->where(static::$primary_key, $this->{static::$primary_key})
-				->delete(static::$table);
+			->where(static::$primary_key, $this->{static::$primary_key})
+			->delete(static::$table);
 	}
 
 	/**
@@ -356,7 +378,7 @@ class Orm_model extends Orm {
 	 * Passage d'objets en appelant la methode du nom de la relation
 	 * On peut passer en parametre des arguments pour filtrer le retour d'object
 	 * @param type $get
-	 * @return boolean|\Orm_model
+	 * @return boolean|Orm_model
 	 */
 	public function __call($name, $argument) {
 		if ( ! property_exists(static::$table.'_model', 'relations'))
@@ -377,7 +399,7 @@ class Orm_model extends Orm {
 	/**
 	 * Association de modèles
 	 * @param Orm_association $association
-	 * @return \Orm_model
+	 * @return Orm_model
 	 */
 	public function association(Orm_association $association) {
 		switch ($association->type) {
