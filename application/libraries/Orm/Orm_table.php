@@ -7,11 +7,14 @@
  * @link https://github.com/maltyxx/sag-orm
  * @version 2.9 (20140611)
  */
-require_once(__DIR__.'/Orm/Orm_primary_key.php');
-require_once(__DIR__.'/Orm/Orm_field.php');
-require_once(__DIR__.'/Orm/Orm_association.php');
-require_once(__DIR__.'/Orm/Orm.php');
-require_once(__DIR__.'/Orm/Orm_model.php');
+class Orm_table {
+	
+	public $table;
+	
+	public function __construct($table) {
+		$this->table = $table;
+	}
+}
 
-/* End of file Orm.php */
-/* Location: ./application/libraries/Orm.php */
+/* End of file Orm_table.php */
+/* Location: ./application/libraries/Orm_table.php */

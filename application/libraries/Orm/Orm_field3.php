@@ -5,9 +5,9 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 2.9 (20140611)
+ * @version 3.0 (20140618)
  */
-class Orm_field {
+class Orm_field3 {
 	const TYPE_INTEGER = 'int';
 	const TYPE_INT = self::TYPE_INTEGER;
 	const TYPE_FLOAT = 'float';
@@ -16,27 +16,26 @@ class Orm_field {
 	const TYPE_DATE = self::TYPE_STRING;
 	const TYPE_DATETIME = self::TYPE_STRING;
 	
-	const OPTION_NULL = 'NULL';
 	const OPTION_ENCRYPT = 'encrypt';
 	const OPTION_BINARY = 'binary';
 	const OPTION_VECTOR = 'vector';
 	
-	public $name;
-	public $value;
-	public $type;
+	public $name = NULL;
+	public $value = NULL;
+	public $type = self::TYPE_STRING;
+	public $allow_null = FALSE;
+	public $date_format = NULL;
+	public $default_value = NULL;
 	
-	public function __construct(array $data) {		
-		$this->name = $data['name'];
-		$this->value = $data['value'];
-		$this->type = $data['type'];
+	public function __construct(array $data) {
+		foreach ($data as $key => $value) {
+			if (isset($this->{$key}))
+				$this->{$key} = $value;
+		}
 	}
-	
-	public function get_options() {
-		return explode('|', $this->type);
-	}
-		
-	public function is_null() {		
-		return in_array(self::OPTION_NULL, $this->get_options());
+			
+	public function is_null() {
+		return $this->allow_null;
 	}
 	
 	public function is_encrypt() {		
@@ -51,12 +50,10 @@ class Orm_field {
 		return ($this->name === self::OPTION_VECTOR);
 	}
 	
-	public function get_type() {
-		$type = $this->get_options();
-		
-		if (in_array(self::TYPE_INTEGER, $type)) {
+	public function get_type() {		
+		if (in_array(self::TYPE_INTEGER, $this->type)) {
 			return self::TYPE_INTEGER;
-		} else if (in_array(self::TYPE_FLOAT, $type)) {
+		} else if (in_array(self::TYPE_FLOAT, $this->type)) {
 			return self::TYPE_FLOAT;
 		} else {
 			return self::TYPE_STRING;
@@ -65,7 +62,7 @@ class Orm_field {
 	
 	public function cast() {
 		if ($this->is_null() && empty($this->value)) {
-			settype($this->value, self::OPTION_NULL);
+			settype($this->value, 'NULL');
 			return;
 		} 
 		

@@ -20,7 +20,10 @@ class Orm_model extends Orm {
 		
 		// Si la variable $data est un entier, c'est une clé primaire
 		if (is_numeric($data)) {
-			return $this->where(static::$primary_key, (int)$data)->find_one();
+			return $this->primary_key(new Orm_primary_key(array(
+				'field' => static::$primary_key,
+				'value' => $data
+			)));
 			
 		// Si la variable $data est une instance de la classe Orm_association
 		} else if ($data instanceof Orm_association) {
@@ -250,16 +253,22 @@ class Orm_model extends Orm {
 
 		// Si le cache est activé
 		if (parent::$config['cache']) {
+						
 			$cache_id = 'orm_'.static::$table;
 			$cache_key = md5(parent::$CI->db->_compile_select());
-			
+									
 			// Vérifie si le cache existe
 			if ( ! $data = parent::$CI->cache->get($cache_id) OR ! isset($data[$cache_key])) {
+				
+				//error_log('[INFO][ORM] cache_id: '.$cache_id.' cache_key: '.$cache_key.' sql: '.parent::$CI->db->_compile_select(), 0);
+				
 				$data = (is_array($data)) ? $data : array();
 
 				$data[$cache_key] = parent::$CI->db->get()->result_array();
 				
 				parent::$CI->cache->save($cache_id, $data, parent::$config['tts']);
+			} else {
+				//error_log('[INFO][ORM] cache_id: '.$cache_id.' cache_key: '.$cache_key.' exist: true', 0);
 			}
 
 			// Vide la requete
@@ -395,7 +404,16 @@ class Orm_model extends Orm {
 			'type' => static::$relations[$name][0]
 		)));
 	}
-
+	
+	/**
+	 * Retourne l'object à l'aide de ça clé primaire
+	 * @param Orm_primary_key $primary_key
+	 * @return Orm_model
+	 */
+	public function primary_key(Orm_primary_key $primary_key) {
+		return $this->where($primary_key->field, $primary_key->value)->find_one();
+	}
+	
 	/**
 	 * Association de modèles
 	 * @param Orm_association $association
