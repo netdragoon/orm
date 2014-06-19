@@ -4,14 +4,16 @@ if (!defined('BASEPATH'))
 	exit('No direct script access allowed');
 
 /**
- * Willy & Case
+ * Willy & Case & Yoann
  * has_one      : un utilisateur n'a qu'une nationnalité (id_nationnalité dans users)
  * has_many     : un groupe a plusieurs membres
  * belongs_to   : plusieurs vidéos appartiennent à une utilisateur (id_user dans users_videos)
  */
 class Modelgenerator extends CI_Controller {
 
-	private $model = '';
+	private $override = array();
+	private $association = array();
+	private $model_output = '';
 
 	const STARTCODE2KEEP = "//--START_PERSISTANT_CODE";
 	const ENDCODE2KEEP = "//--END_PERSISTANT_CODE";
@@ -20,81 +22,99 @@ class Modelgenerator extends CI_Controller {
 		parent::__construct();
 	}
 
-	public function index() {
+	private function _config() {
+		// Fichier de configuration des bases de données
+		$file_db_env = APPPATH.'config/'.ENVIRONMENT.'/database.php';
+		$file_db = APPPATH.'config/database.php';
+		$file_path = (file_exists($file_db_env)) ? $file_db_env : $file_db;
 
-		$this->load->database();
-		$relations_comments = array();
-		$code2keep = array();
-		$stockRelation = array();
-		$stockRelation_javadoc = array();
-		$relation_inverse = array(
-			"belongs_to" => "has_many",
-			"has_many" => "belongs_to",
-			"has_one" => "has_one"
-		);
+		// Inclusion de la configuration
+		require_once($file_path);
 
-		/* ---------------------------------- */
-		/*      CLEAN DES MODELES           */
-		/* ---------------------------------- */
+		// Retourne la configuration
+		return $db;
+	}
+
+	private function _dir($dir) {
+		if ( ! file_exists($dir)) {
+			if ( ! mkdir($dir, 0644)) {
+				return FALSE;
+			}
+		}
+
+		return TRUE;
+	}
+
+	private function _save_override($dir) {
+		
 		echo '<pre>';
 		echo '<h1>CLEAN</h1>';
-		// sélection de tous les modèles
-		$files = glob(FCPATH.APPPATH.'models/kraken/*');
-		foreach ($files as $file) { // iterate files
-			if (is_file($file)) {
-				$filename = str_replace(FCPATH.APPPATH.'models/kraken/', "", $file);
+		
+		foreach (glob($dir) as $file_path) {
+			if (is_file($file_path)) {
+				$file = basename($file_path, '.php');
+				$path = dirname($file_path);
+				$file_content = file_get_contents($file_path);
 
-				// on ouvre le fichier et on isole le code à ne pas toucher
-				$content = file_get_contents($file);
-				$particules = explode(self::STARTCODE2KEEP, $content);
-				if (!empty($particules[1])) {
+				$particules = explode(self::STARTCODE2KEEP, $file_content);
+
+				if ( ! empty($particules[1])) {
 					$particules = explode(self::ENDCODE2KEEP, $particules[1]);
-					$codePerso = $particules[0];
+					$override = $particules[0];
 				} else {
-					$codePerso = "";
-				}
-				if (!empty($codePerso)) {
-					$code2keep[$filename] = "\r\n\t".self::STARTCODE2KEEP.($codePerso)."".self::ENDCODE2KEEP."\r\n";
+					$override = '';
 				}
 
-				echo 'Suppression du fichier <b>'.$filename.'</b> du rep kraken : ';
-				if (unlink($file)) {
+				if ( ! empty($override)) {
+					$this->override[$file] = "\r\n\t".self::STARTCODE2KEEP.($override)."".self::ENDCODE2KEEP."\r\n";
+				}
+
+				echo "Suppression du fichier <b>$file</b> du répertoire $path";
+
+				if (unlink($file_path)) {
 					echo '<b style="color:green">OK</b><br />';
 				} else {
 					echo '<b style="color:red">KO</b><br />';
 				}
 			}
 		}
+	}
 
-		/* ---------------------------------------- */
-		/*    STOCKAGE DES RELATIONS INVERSES       */
-		/* ---------------------------------------- */
-
-		$query_table = $this->db->query('SHOW TABLE STATUS');
+	private function _association_many() {	
+		$relation_inverse = array(
+			"belongs_to" => "has_many",
+			"has_many" => "belongs_to",
+			"has_one" => "has_one"
+		);
+		
+		$query_table = $this->db->query("SHOW TABLE STATUS");
+		
 		foreach ($query_table->result_array() as $table) {
 			// création des relations (clés étrangères d'inno db préalablement définies en base)
-			$sql_foreign_keys = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
-                                    FROM information_schema.KEY_COLUMN_USAGE
-                                    WHERE CONSTRAINT_NAME != "PRIMARY"
-                                        AND  TABLE_NAME = "'.$table['Name'].'"';
+			$sql = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
+									FROM information_schema.KEY_COLUMN_USAGE
+									WHERE CONSTRAINT_NAME != "PRIMARY"
+										AND  TABLE_NAME = "'.$table['Name'].'"';
 
-			$query_relations = $this->db->query($sql_foreign_keys);
+			$query_relations = $this->db->query($sql);
 
 			if ($query_relations->num_rows() > 0) {
-
 				foreach ($query_relations->result_array() as $data) {
 					$referenced_table_name = $data["REFERENCED_TABLE_NAME"];
-					$relation_type = "has_one"; // le plus courant
-
+					
+					 // le plus courant
+					$relation_type = "has_one";
+					
 					$query_field = $this->db->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
 					$relations_comments = array();
+					
 					if ($query_field->num_rows() > 0) {
 						foreach ($query_field->result_array() as $field) {
 							$relations_comments[$field['Field']] = $field['Comment'];
 						}
 					}
 
-					if (!empty($relations_comments[$data["COLUMN_NAME"]])) {
+					if ( ! empty($relations_comments[$data["COLUMN_NAME"]])) {
 						$relation_type = $relations_comments[$data["COLUMN_NAME"]];
 
 						if ($relation_type != "has_one" && $relation_type != "has_many" && $relation_type != "belongs_to") {
@@ -107,27 +127,32 @@ class Modelgenerator extends CI_Controller {
 
 						// STOCKAGE DES RELATION INVERSES						
 						$referenced_table_name_t = strtolower($table['Name']);
-						$stockRelation[$referenced_table_name][] = "\t\t'$referenced_table_name_t' => array('{$relation_inverse[$relation_type]}', '{$table['Name']}', '{$data["COLUMN_NAME"]}', 'id'),\r\n";
-						$stockRelation_javadoc[$referenced_table_name][] = "\t * @method {$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
+						$this->association[$referenced_table_name]['php'][] = "\t\t'$referenced_table_name_t' => array('{$relation_inverse[$relation_type]}', '{$table['Name']}', '{$data["COLUMN_NAME"]}', 'id'),\r\n";
+						$this->association[$referenced_table_name]['javadoc'][] = "\t * @method {$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
 					}
 				}
 			}
 		}
-
-		//print_r($stockRelation);
+		
 		echo '<hr />';
-		/* ---------------------------------- */
-		/*      RE-CREATION DES MODELES       */
-		/* ---------------------------------- */
+	}
+	
+	private function _create_model($namespace) {		
+		$relations_comments = array();
+		
 		echo '<h1>GENERATION</h1>';
+
+		$query_table = $this->db->query("SHOW TABLE STATUS");
+		
 		foreach ($query_table->result_array() as $table) {
-			$this->model = '';
+			$this->model_output = '';
 
-			$this->_append("<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');"."\r\n");
+			$this->_append("<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');\r\n");
 			$this->_append("\r\n");
-			$this->_append('class '.$table['Name'].'_model extends Orm_model {'."\r\n");
+			$this->_append("namespace $namespace;\r\n");
 			$this->_append("\r\n");
-
+			$this->_append("class {$table['Name']}_model extends Orm_model {\r\n");
+			$this->_append("\r\n");
 
 			//on va gerer pour les table d'enum, les constantes sur les modeles codigniter
 			if (strpos($table['Name'], "enum") === 0 && $table['Name'] != "enumregime") {
@@ -234,7 +259,7 @@ class Modelgenerator extends CI_Controller {
 				}
 				$foreign_keys.="\r\n\t);\r\n";
 				$this->_append($primary_keys);
-				
+
 				//$this->_append($foreign_keys);
 			}
 
@@ -250,18 +275,19 @@ class Modelgenerator extends CI_Controller {
                                         AND  TABLE_NAME = "'.$table['Name'].'"';
 			$query_relations = $this->db->query($sql_foreign_keys);
 			$asso = false;
-			if ($query_relations->num_rows() > 0 || (isset($stockRelation[$table['Name']]) && count($stockRelation[$table['Name']])) > 0) {
+						
+			if ($query_relations->num_rows() > 0 || (isset($this->association[$table['Name']]) && count($this->association[$table['Name']])) > 0) {
 				$asso = true;
 
 				$relations_javadoc_buffer = "\t/**\r\n";
 				$relations_buffer = "\t public static \$relations = array(\r\n";
 				// écriture relation inverses
-				if (isset($stockRelation[$table['Name']])) {
-					foreach ($stockRelation[$table['Name']] as $rel) {
+				if (isset($this->association[$table['Name']])) {
+					foreach ($this->association[$table['Name']]['php'] as $rel) {
 						$relations_buffer .= $rel;
 					}
 
-					foreach ($stockRelation_javadoc[$table['Name']] as $rel_j) {
+					foreach ($this->association[$table['Name']]['javadoc'] as $rel_j) {
 						$relations_javadoc_buffer .= $rel_j;
 					}
 				}
@@ -293,30 +319,59 @@ class Modelgenerator extends CI_Controller {
 				$relations_buffer = str_replace(",\r\n\t);", "\r\n\t);", $relations_buffer);
 
 				$relations_javadoc_buffer .= "\t */\r\n";
-
+				
 				$this->_append($relations_javadoc_buffer);
 				$this->_append($relations_buffer);
 			}
-
+			
 			$filename = $table['Name'].'_model.php';
-			// ajout du code à garder
-			if (!empty($code2keep[$filename])) {
-				$this->_append($code2keep[$filename]."\r\n");
+			
+			// Si il exite un override
+			if ( ! empty($this->override[$filename])) {
+				$this->_append($this->override[$filename]."\r\n");
 			}
+			
 			$this->_append('}'."\r\n");
 			$this->_append("\r\n");
-			$fp = fopen(FCPATH.APPPATH.'models/kraken/'.$filename, 'w+');
+						
+			$fp = fopen(FCPATH.APPPATH.'models/'.$namespace.'/'.$filename, 'w+');
+			
 			echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:green">OK</b><br />';
-			fputs($fp, $this->model);
+			
+			fputs($fp, $this->model_output);
 			fclose($fp);
 		}
+		
+		$this->association = array();
+		$this->override = array();
 
-		echo '<hr>';
-		$this->output->set_output("<h2>DONE ;)</h2>");
+		echo '<hr />';
+		echo '<h2>DONE ;)</h2>';
+	}
+
+	public function run() {
+		$config = $this->_config();
+
+		foreach ($config as $namespace => $db) {
+			// Création du répertoire
+			$this->_dir(APPPATH.'models/'.$namespace);
+
+			// Récupère les données des anciens modèles
+			$this->_save_override(APPPATH.'models/'.$namespace.'/*');
+
+			// Stock la nouvelle connexion à la base de donnée
+			$this->load->database($namespace);
+			
+			// Stock les association many
+			$this->_association_many();
+			
+			// Création des modèles
+			$this->_create_model($namespace);
+		}
 	}
 
 	private function _append($output) {
-		$this->model .= $output;
+		$this->model_output .= $output;
 	}
 
 }
