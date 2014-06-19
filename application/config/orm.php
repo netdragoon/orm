@@ -11,7 +11,7 @@
 $config['orm'] = array(
     'cache' => FALSE,
     'tts' => 3600,
-    'autoloadmodel' => FALSE,
+    'autoloadmodel' => TRUE,
     'binary_enable' => FALSE, // MySQL 5.6 minimum
     'encryption_enable' => FALSE, // MySQL 5.6 minimum
     'encryption_key' => "" // MySQL 5.6 minimum

@@ -7,14 +7,17 @@
  * @link https://github.com/maltyxx/sag-orm
  * @version 2.9 (20140611)
  */
-class Orm_model extends Orm {
+class Orm_model extends Orm {	
 	/**
 	 * Constructeur
 	 * @param NULL|int|array $data
 	 * @return object|
 	 */
 	function __construct($data = NULL) {
-						
+		
+		// Connection à la base de donnée
+		$this->_connect();
+								
 		// Créer les variables de l'objet
 		$this->_generate_variable();
 		
@@ -28,6 +31,23 @@ class Orm_model extends Orm {
 		// Si la variable $data est une instance de la classe Orm_association
 		} else if ($data instanceof Orm_association) {
 			$this->association($data);
+		}
+	}
+	
+	protected function _namespace() {
+		$namespace = explode('\\', get_class($this));
+		return $namespace[0];
+	}
+	
+	/**
+	 * Créer les variables dans le modèle
+	 * @return
+	 */
+	protected function _connect() {
+		// Si il exite une connxion		
+		if ( ! isset(parent::$CI->{'db_'.$this->_namespace()})) {
+			// Nouvelle connexion
+			parent::$CI->{'db_'.$this->_namespace()} = parent::$CI->load->database($this->_namespace(), TRUE);	
 		}
 	}
 	
@@ -86,7 +106,7 @@ class Orm_model extends Orm {
 						
 			// Si c'est un champ qu'on doit crypter
 			if (parent::$config['encryption_enable'] && $field->is_encrypt()) {
-				$input[] = array($field->name, "TO_BASE64(AES_ENCRYPT('".parent::$CI->db->escape_str($field->value)."', UNHEX('".parent::$config['encryption_key']."'), UNHEX('".$vector_value."')))", FALSE);
+				$input[] = array($field->name, "TO_BASE64(AES_ENCRYPT('".parent::$CI->{'db_'.$this->_namespace()}->escape_str($field->value)."', UNHEX('".parent::$config['encryption_key']."'), UNHEX('".$vector_value."')))", FALSE);
 			
 			// Si c'est un champ vecteur
 			} else if (parent::$config['encryption_enable'] && $field->is_vector()) {
@@ -94,7 +114,7 @@ class Orm_model extends Orm {
 				
 			// Si c'est un champ binaire
 			} else if (parent::$config['binary_enable'] && $field->is_binary()) {
-				$input[] = array($field->name, "FROM_BASE64('".parent::$CI->db->escape_str($field->value)."')", FALSE);
+				$input[] = array($field->name, "FROM_BASE64('".parent::$CI->{'db_'.$this->_namespace()}->escape_str($field->value)."')", FALSE);
 			
 			// Par défaut
 			} else {
@@ -153,7 +173,7 @@ class Orm_model extends Orm {
 	 * @return Orm_model
 	 */
 	public function where($key, $value = NULL, $escape = TRUE) {
-		parent::$CI->db->where($key, $value, $escape);
+		parent::$CI->{'db_'.$this->_namespace()}->where($key, $value, $escape);
 
 		return $this;
 	}
@@ -166,7 +186,7 @@ class Orm_model extends Orm {
 	 * @return Orm_model
 	 */
 	public function where_in($key = NULL, $values = NULL) {
-		parent::$CI->db->where_in($key, $values);
+		parent::$CI->{'db_'.$this->_namespace()}->where_in($key, $values);
 
 		return $this;
 	}
@@ -179,7 +199,7 @@ class Orm_model extends Orm {
 	 * @return Orm_model
 	 */
 	public function like($field, $match = '', $side = 'both') {
-		parent::$CI->db->like($field, $match, $side);
+		parent::$CI->{'db_'.$this->_namespace()}->like($field, $match, $side);
 
 		return $this;
 	}
@@ -190,7 +210,7 @@ class Orm_model extends Orm {
 	 * @return Orm_model
 	 */
 	public function group_by($by) {
-		parent::$CI->db->group_by($by);
+		parent::$CI->{'db_'.$this->_namespace()}->group_by($by);
 
 		return $this;
 	}
@@ -203,7 +223,7 @@ class Orm_model extends Orm {
 	 * @return Orm_model
 	 */
 	public function having($key, $value = '', $escape = TRUE) {
-		parent::$CI->db->having($key, $value, $escape);
+		parent::$CI->{'db_'.$this->_namespace()}->having($key, $value, $escape);
 
 		return $this;
 	}
@@ -215,7 +235,7 @@ class Orm_model extends Orm {
 	 * @return Orm_model
 	 */
 	public function order_by($orderby, $direction = '') {
-		parent::$CI->db->order_by($orderby, $direction);
+		parent::$CI->{'db_'.$this->_namespace()}->order_by($orderby, $direction);
 
 		return $this;
 	}
@@ -227,7 +247,7 @@ class Orm_model extends Orm {
 	 * @return Orm_model
 	 */
 	public function limit($value, $offset = '') {
-		parent::$CI->db->limit($value, $offset);
+		parent::$CI->{'db_'.$this->_namespace()}->limit($value, $offset);
 
 		return $this;
 	}
@@ -237,7 +257,7 @@ class Orm_model extends Orm {
 	 * @return int
 	 */
 	public function count() {
-		return (int) parent::$CI->db->count_all_results(static::$table);
+		return (int) parent::$CI->{'db_'.$this->_namespace()}->count_all_results(static::$table);
 	}
 
 	/**
@@ -247,39 +267,35 @@ class Orm_model extends Orm {
 	protected function _data_find() {
 
 		foreach ($this->_output() as $select)
-			parent::$CI->db->select($select[0], $select[1]);
+			parent::$CI->{'db_'.$this->_namespace()}->select($select[0], $select[1]);
 
-		parent::$CI->db->from(static::$table);
+		parent::$CI->{'db_'.$this->_namespace()}->from(static::$table);
 
 		// Si le cache est activé
 		if (parent::$config['cache']) {
 						
 			$cache_id = 'orm_'.static::$table;
-			$cache_key = md5(parent::$CI->db->_compile_select());
+			$cache_key = md5(parent::$CI->{'db_'.$this->_namespace()}->_compile_select());
 									
 			// Vérifie si le cache existe
 			if ( ! $data = parent::$CI->cache->get($cache_id) OR ! isset($data[$cache_key])) {
-				
-				//error_log('[INFO][ORM] cache_id: '.$cache_id.' cache_key: '.$cache_key.' sql: '.parent::$CI->db->_compile_select(), 0);
-				
+								
 				$data = (is_array($data)) ? $data : array();
 
-				$data[$cache_key] = parent::$CI->db->get()->result_array();
+				$data[$cache_key] = parent::$CI->{'db_'.$this->_namespace()}->get()->result_array();
 				
 				parent::$CI->cache->save($cache_id, $data, parent::$config['tts']);
-			} else {
-				//error_log('[INFO][ORM] cache_id: '.$cache_id.' cache_key: '.$cache_key.' exist: true', 0);
 			}
 
 			// Vide la requete
-			parent::$CI->db->_reset_select();
+			parent::$CI->{'db_'.$this->_namespace()}->_reset_select();
 
 			// Retoune les résultats en cache
 			return $data[$cache_key];
 		}
 
 		// Retourne les résultats
-		return parent::$CI->db->get()->result_array();
+		return parent::$CI->{'db_'.$this->_namespace()}->get()->result_array();
 	}
 
 	/**
@@ -308,7 +324,7 @@ class Orm_model extends Orm {
 	 * @return boolean|objet
 	 */
 	public function find_one() {
-		parent::$CI->db->limit(1);
+		parent::$CI->{'db_'.$this->_namespace()}->limit(1);
 
 		$data = $this->find();
 
@@ -331,16 +347,16 @@ class Orm_model extends Orm {
 				parent::$CI->cache->delete($file);
 		}
 
-		parent::$CI->db->from(static::$table);
+		parent::$CI->{'db_'.$this->_namespace()}->from(static::$table);
 
 		foreach ($this->_input(get_object_vars($this)) as $set)
-			parent::$CI->db->set($set[0], $set[1], $set[2]);
+			parent::$CI->{'db_'.$this->_namespace()}->set($set[0], $set[1], $set[2]);
 
 		if (isset($this->{static::$primary_key}) && !empty($this->{static::$primary_key}) && $force_insert === FALSE) {
-			return parent::$CI->db->where(static::$primary_key, $this->{static::$primary_key})->update();
+			return parent::$CI->{'db_'.$this->_namespace()}->where(static::$primary_key, $this->{static::$primary_key})->update();
 		} else {
-			parent::$CI->db->insert();
-			return $this->{static::$primary_key} = parent::$CI->db->insert_id();
+			parent::$CI->{'db_'.$this->_namespace()}->insert();
+			return $this->{static::$primary_key} = parent::$CI->{'db_'.$this->_namespace()}->insert_id();
 		}
 	}
 
@@ -362,7 +378,7 @@ class Orm_model extends Orm {
 				parent::$CI->cache->delete($file);
 		}
 
-		return parent::$CI->db
+		return parent::$CI->{'db_'.$this->_namespace()}
 			->where(static::$primary_key, $this->{static::$primary_key})
 			->delete(static::$table);
 	}
@@ -419,16 +435,16 @@ class Orm_model extends Orm {
 	 * @param Orm_association $association
 	 * @return Orm_model
 	 */
-	public function association(Orm_association $association) {
+	public function association(Orm_association $association) {		
 		switch ($association->type) {
 			case Orm_association::TYPE_HAS_ONE:
-				parent::$CI->db->where($association->field, $association->value)->limit(1);
+				parent::$CI->{'db_'.$this->_namespace()}->where($association->field, $association->value)->limit(1);
 				break;
 			case Orm_association::TYPE_HAS_MANY:
-				parent::$CI->db->where($association->field, $association->value);
+				parent::$CI->{'db_'.$this->_namespace()}->where($association->field, $association->value);
 				break;
 			case Orm_association::TYPE_BELONGS_TO:
-				parent::$CI->db->where($association->field, $association->value)->limit(1);
+				parent::$CI->{'db_'.$this->_namespace()}->where($association->field, $association->value)->limit(1);
 				break;
 		}
 		

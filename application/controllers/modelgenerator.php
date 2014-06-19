@@ -80,7 +80,7 @@ class Modelgenerator extends CI_Controller {
 		}
 	}
 
-	private function _association_many() {	
+	private function _association_many($namespace) {	
 		$relation_inverse = array(
 			"belongs_to" => "has_many",
 			"has_many" => "belongs_to",
@@ -128,7 +128,7 @@ class Modelgenerator extends CI_Controller {
 						// STOCKAGE DES RELATION INVERSES						
 						$referenced_table_name_t = strtolower($table['Name']);
 						$this->association[$referenced_table_name]['php'][] = "\t\t'$referenced_table_name_t' => array('{$relation_inverse[$relation_type]}', '{$table['Name']}', '{$data["COLUMN_NAME"]}', 'id'),\r\n";
-						$this->association[$referenced_table_name]['javadoc'][] = "\t * @method {$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
+						$this->association[$referenced_table_name]['javadoc'][] = "\t * @method $namespace\\{$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
 					}
 				}
 			}
@@ -147,11 +147,12 @@ class Modelgenerator extends CI_Controller {
 		foreach ($query_table->result_array() as $table) {
 			$this->model_output = '';
 
-			$this->_append("<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');\r\n");
-			$this->_append("\r\n");
+			$this->_append("<?php\r\n");
 			$this->_append("namespace $namespace;\r\n");
 			$this->_append("\r\n");
-			$this->_append("class {$table['Name']}_model extends Orm_model {\r\n");
+			$this->_append("if ( ! defined('BASEPATH')) exit('No direct script access allowed');\r\n");
+			$this->_append("\r\n");
+			$this->_append("class {$table['Name']}_model extends \Orm_model {\r\n");
 			$this->_append("\r\n");
 
 			//on va gerer pour les table d'enum, les constantes sur les modeles codigniter
@@ -310,7 +311,7 @@ class Modelgenerator extends CI_Controller {
 					}
 
 					if ($relation_type != "") {
-						$relations_javadoc_buffer .= "\t * @method {$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
+						$relations_javadoc_buffer .= "\t * @method $namespace\\{$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
 						$relations_buffer .= "\t\t'$referenced_table_name' => array('$relation_type', '$referenced_table_name', '$referenced_column_name', '$column_name'),\r\n";
 					}
 				}
@@ -363,7 +364,7 @@ class Modelgenerator extends CI_Controller {
 			$this->load->database($namespace);
 			
 			// Stock les association many
-			$this->_association_many();
+			$this->_association_many($namespace);
 			
 			// Création des modèles
 			$this->_create_model($namespace);
