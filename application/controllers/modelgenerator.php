@@ -29,7 +29,7 @@ class Modelgenerator extends CI_Controller {
 		$file_path = (file_exists($file_db_env)) ? $file_db_env : $file_db;
 
 		// Inclusion de la configuration
-		require_once($file_path);
+		require($file_path);
 
 		// Retourne la configuration
 		return $db;
@@ -87,7 +87,7 @@ class Modelgenerator extends CI_Controller {
 			"has_one" => "has_one"
 		);
 		
-		$query_table = $this->db->query("SHOW TABLE STATUS");
+		$query_table = $this->{'db_'.$namespace}->query("SHOW TABLE STATUS");
 		
 		foreach ($query_table->result_array() as $table) {
 			// création des relations (clés étrangères d'inno db préalablement définies en base)
@@ -96,7 +96,7 @@ class Modelgenerator extends CI_Controller {
 									WHERE CONSTRAINT_NAME != "PRIMARY"
 										AND  TABLE_NAME = "'.$table['Name'].'"';
 
-			$query_relations = $this->db->query($sql);
+			$query_relations = $this->{'db_'.$namespace}->query($sql);
 
 			if ($query_relations->num_rows() > 0) {
 				foreach ($query_relations->result_array() as $data) {
@@ -105,7 +105,7 @@ class Modelgenerator extends CI_Controller {
 					 // le plus courant
 					$relation_type = "has_one";
 					
-					$query_field = $this->db->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
+					$query_field = $this->{'db_'.$namespace}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
 					$relations_comments = array();
 					
 					if ($query_field->num_rows() > 0) {
@@ -142,7 +142,7 @@ class Modelgenerator extends CI_Controller {
 		
 		echo '<h1>GENERATION</h1>';
 
-		$query_table = $this->db->query("SHOW TABLE STATUS");
+		$query_table = $this->{'db_'.$namespace}->query("SHOW TABLE STATUS");
 		
 		foreach ($query_table->result_array() as $table) {
 			$this->model_output = '';
@@ -159,7 +159,7 @@ class Modelgenerator extends CI_Controller {
 			if (strpos($table['Name'], "enum") === 0 && $table['Name'] != "enumregime") {
 				$this->_append("\r\n");
 				$enums = array();
-				$query_enum = $this->db->query('SELECT * FROM '.$table['Name']);
+				$query_enum = $this->{'db_'.$namespace}->query('SELECT * FROM '.$table['Name']);
 				if ($query_enum->num_rows() > 0) {
 					foreach ($query_enum->result_array() as $val) {
 						$id = $val['id'];
@@ -179,7 +179,7 @@ class Modelgenerator extends CI_Controller {
 			$this->_append("\t".'public static $table = \''.$table['Name'].'\';'."\r\n");
 			$this->_append("\r\n");
 
-			$query_field = $this->db->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
+			$query_field = $this->{'db_'.$namespace}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
 
 			if ($query_field->num_rows() > 0) {
 
@@ -274,7 +274,7 @@ class Modelgenerator extends CI_Controller {
                                     FROM information_schema.KEY_COLUMN_USAGE
                                     WHERE CONSTRAINT_NAME != "PRIMARY"
                                         AND  TABLE_NAME = "'.$table['Name'].'"';
-			$query_relations = $this->db->query($sql_foreign_keys);
+			$query_relations = $this->{'db_'.$namespace}->query($sql_foreign_keys);
 			$asso = false;
 						
 			if ($query_relations->num_rows() > 0 || (isset($this->association[$table['Name']]) && count($this->association[$table['Name']])) > 0) {
@@ -361,7 +361,7 @@ class Modelgenerator extends CI_Controller {
 			$this->_save_override(APPPATH.'models/'.$namespace.'/*');
 
 			// Stock la nouvelle connexion à la base de donnée
-			$this->load->database($namespace);
+			$this->{'db_'.$namespace} = $this->load->database($namespace, TRUE);
 			
 			// Stock les association many
 			$this->_association_many($namespace);
