@@ -15,71 +15,69 @@ class Orm_field {
 	const TYPE_STRING = 'string';
 	const TYPE_DATE = self::TYPE_STRING;
 	const TYPE_DATETIME = self::TYPE_STRING;
-	
-	const OPTION_NULL = 'NULL';
-	const OPTION_ENCRYPT = 'encrypt';
-	const OPTION_BINARY = 'binary';
-	const OPTION_VECTOR = 'vector';
-	
+	const ALLOWNULL = 'allow_null';
+	const ENCRYPT = 'encrypt';
+	const BINARY = 'binary';
+    	
 	public $name;
-	public $value;
 	public $type;
+	public $date_format;
+	public $allow_null;
+	public $encrypt;
+	public $binary;
+	public $default_value;
+	public $value;
 	
-	public function __construct(array $data) {		
-		$this->name = $data['name'];
-		$this->value = $data['value'];
-		$this->type = $data['type'];
+	public function __construct(array $data) {
+        foreach ($data as $key => $value) {
+            if (isset($this->{$key})) 
+                $this->{$key} = $value;
+        }
+        
+        if (empty($this->type))
+            $this->type = self::TYPE_STRING;
+        
+        if (empty($this->date_format))
+            $this->date_format = FALSE;
+        
+        if (empty($this->encrypt))
+            $this->encrypt = FALSE;
+        
+        if (empty($this->binary))
+            $this->binary = FALSE;
+        
+        if (empty($this->allow_null))
+            $this->allow_null = FALSE;
+        
+        if (empty($this->default_value))
+            $this->default_value = FALSE;
 	}
-	
-	public function get_options() {
-		return explode('|', $this->type);
-	}
-		
-	public function is_null() {		
-		return in_array(self::OPTION_NULL, $this->get_options());
-	}
-	
-	public function is_encrypt() {		
-		return in_array(self::OPTION_ENCRYPT, $this->get_options());
-	}
-	
-	public function is_binary() {		
-		return in_array(self::OPTION_BINARY, $this->get_options());
-	}
-	
-	public function is_vector() {		
-		return ($this->name === self::OPTION_VECTOR);
-	}
-	
-	public function get_type() {
-		$type = $this->get_options();
-		
-		if (in_array(self::TYPE_INTEGER, $type)) {
-			return self::TYPE_INTEGER;
-		} else if (in_array(self::TYPE_FLOAT, $type)) {
-			return self::TYPE_FLOAT;
-		} else {
-			return self::TYPE_STRING;
+			
+	public function convert() {
+        if ( ! empty($this->default_value) && empty($this->value)) {
+            return $this->value = $this->default_value;
 		}
-	}
-	
-	public function cast() {
-		if ($this->is_null() && empty($this->value)) {
-			settype($this->value, self::OPTION_NULL);
-			return;
-		} 
-		
+        
+		if ($this->allow_null === TRUE && empty($this->value)) {
+            return $this->value = NULL;
+		}
+        
+        if (in_array($this->type, array(self::TYPE_DATE, self::TYPE_DATETIME)) &&  ! empty($this->value) && ! empty($this->date_format)) {
+            return $this->value = date($this->date_format, strtotime($this->value));
+        }
+        
 		switch (strtolower($this->type)) {
 			case self::TYPE_INTEGER:
-				settype($this->value, self::TYPE_INTEGER);
+				settype($this->value, 'integer');
 				break;
 			case self::TYPE_FLOAT:
-				settype($this->value, self::TYPE_FLOAT);
+				settype($this->value, 'float');
 				break;
-			case self::TYPE_STRING:
 			default:
-				settype($this->value, self::TYPE_STRING);
+				settype($this->value, 'string');
 		}
+        
+        return $this->value;
 	}
 }
 

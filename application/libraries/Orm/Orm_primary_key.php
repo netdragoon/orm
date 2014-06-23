@@ -9,12 +9,12 @@
  */
 class Orm_primary_key {
 	
-	public $field;
+	public $name;
 	public $value;
 	
 	public function __construct(array $data) {		
-		$this->field = $data['field'];
-		$this->value = intval($data['value']);
+        $this->name = $data['name'];
+        $this->value = (int)$data['value'];
 	}
 }
 

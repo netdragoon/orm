@@ -9,10 +9,10 @@
  */
 class Orm_table {
 	
-	public $table;
+	public $name;
 	
-	public function __construct($table) {
-		$this->table = $table;
+	public function __construct($name) {
+		$this->name = $name;
 	}
 }
 

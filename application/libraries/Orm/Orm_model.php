@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 2.9 (20140611)
+ * @version 3.0 (20140611)
  */
 class Orm_model extends Orm {
 
@@ -20,18 +20,18 @@ class Orm_model extends Orm {
         $this->_connect();
 
         // Créer les variables de l'objet
-        $this->_generate_variable();
+        $this->_generate();
 
         // Si la variable $data est un entier, c'est une clé primaire
         if (is_numeric($data)) {
-            return $this->primary_key(new Orm_primary_key(array(
-                'field' => static::$primary_key,
+            return $this->_find_primary_key(new Orm_primary_key(array(
+                'name' => static::$primary_key,
                 'value' => $data
             )));
 
             // Si la variable $data est une instance de la classe Orm_association
         } else if ($data instanceof Orm_association) {
-            $this->association($data);
+            $this->_association($data);
         }
     }
 
@@ -46,9 +46,9 @@ class Orm_model extends Orm {
      */
     protected function _connect() {
         // Si il exite une connxion		
-        if ( ! isset(parent::$CI->{'db_' . $this->_namespace()})) {
+        if (!isset(parent::$CI->{'db_'.$this->_namespace()})) {
             // Nouvelle connexion
-            parent::$CI->{'db_' . $this->_namespace()} = parent::$CI->load->database($this->_namespace(), TRUE);
+            parent::$CI->{'db_'.$this->_namespace()} = parent::$CI->load->database($this->_namespace(), TRUE);
         }
     }
 
@@ -56,112 +56,141 @@ class Orm_model extends Orm {
      * Créer les variables dans le modèle
      * @return
      */
-    protected function _generate_variable() {
-        if (count(get_object_vars($this)) > 0)
-            return;
-
-        foreach (static::$fields as $field => $type)
-            $this->{$field} = NULL;
+    protected function _generate() {
+        foreach (static::$fields as $field)
+            $this->{$field['name']} = '';
     }
 
-    private function _output() {
+    private function _select() {
         $output = array();
 
-        foreach (static::$fields as $name => $type) {
-
-            $field = new Orm_field(array(
-                'name' => $name,
-                'value' => $this->{$name},
-                'type' => $type
-            ));
-
-            if (parent::$config['encryption_enable'] && $field->is_encrypt()) {
-                $output[] = array("CONVERT(AES_DECRYPT(FROM_BASE64(`" . $field->name . "`), UNHEX('" . parent::$config['encryption_key'] . "'), UNHEX(`vector`)) USING 'utf8') AS `" . $field->name . "`", FALSE);
-            } else if (parent::$config['binary_enable'] && $field->is_binary()) {
-                $output[] = array("TO_BASE64(`" . $field->name . "`) AS `" . $field->name . "`", FALSE);
+        foreach (static::$fields as $field) {
+            
+            $orm_field = new Orm_field($field);
+            
+            if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
+                $output = array(
+                    'field' => "CONVERT(AES_DECRYPT(FROM_BASE64(`".$orm_field->name."`), UNHEX('".parent::$config['encryption_key']."'), UNHEX(`vector`)) USING 'utf8') AS `".$orm_field->name."`",
+                    'quote' => FALSE
+                );
+            } else if (parent::$config['binary_enable'] && $orm_field->binary) {
+                $output = array(
+                    'field' => "TO_BASE64(`".$orm_field->name."`) AS `".$orm_field->name."`",
+                    'quote' => FALSE
+                );
             } else {
-                $output[] = array($field->name, NULL);
+                $output = array(
+                    'field' => $orm_field->name,
+                    'quote' => NULL
+                );
             }
+            
+            parent::$CI->{'db_'.$this->_namespace()}->select($output['field'], $output['quote']);
         }
-
-        return $output;
     }
 
-    private function _input(array $data) {
+    private function _update(array $data) {
         $input = array();
         $vector_value = NULL;
 
         if (parent::$config['encryption_enable'])
-            $vector_value = (!empty($data['vector'])) ? $data['vector'] : random_string('unique');
+            $vector_value = ( ! empty($data['vector'])) ? $data['vector'] : random_string('unique');
 
         // on boucle sur tous les champs de la table
         foreach ($data as $name => $value) {
-
-            $field = new Orm_field(array(
-                'name' => $name,
-                'value' => $value,
-                'type' => static::$fields[$name]
-            ));
+            // Configuratino du champ
+            $config = $this->_get_field($name);
+            
+            // Si la configuration n'existe pas
+            if ($config === FALSE)
+                return;
+            
+            // Initialise l'objet champ
+            $orm_field = new Orm_field($config);
+            
+            // Renseigne la valeur du champ
+            $orm_field->value = $value;
 
             // Si c'est un champ qu'on doit crypter
-            if (parent::$config['encryption_enable'] && $field->is_encrypt()) {
-                $input[] = array($field->name, "TO_BASE64(AES_ENCRYPT('" . parent::$CI->{'db_' . $this->_namespace()}->escape_str($field->value) . "', UNHEX('" . parent::$config['encryption_key'] . "'), UNHEX('" . $vector_value . "')))", FALSE);
+            if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
+                $input = array(
+                    'field' => $orm_field->name,
+                    'value' => "TO_BASE64(AES_ENCRYPT('".parent::$CI->{'db_'.$this->_namespace()}->escape_str($orm_field->value)."', UNHEX('".parent::$config['encryption_key']."'), UNHEX('".$vector_value."')))",
+                    'quote' => FALSE
+                );
 
-                // Si c'est un champ vecteur
-            } else if (parent::$config['encryption_enable'] && $field->is_vector()) {
-                $input[] = array($field->name, $vector_value, TRUE);
+            // Si c'est un champ vecteur
+            } else if (parent::$config['encryption_enable'] && $orm_field->name == 'vector') {                
+                $input = array(
+                    'field' => $orm_field->name,
+                    'value' => $vector_value,
+                    'quote' => TRUE
+                );
 
-                // Si c'est un champ binaire
-            } else if (parent::$config['binary_enable'] && $field->is_binary()) {
-                $input[] = array($field->name, "FROM_BASE64('" . parent::$CI->{'db_' . $this->_namespace()}->escape_str($field->value) . "')", FALSE);
+            // Si c'est un champ binaire
+            } else if (parent::$config['binary_enable'] && $orm_field->binary) {                
+                $input = array(
+                    'field' => $orm_field->name,
+                    'value' => "FROM_BASE64('".parent::$CI->{'db_'.$this->_namespace()}->escape_str($orm_field->value)."')",
+                    'quote' => FALSE
+                );
 
-                // Par défaut
-            } else {
-                $input[] = array($field->name, $field->value, TRUE);
+            // Par défaut
+            } else {                
+                $input = array(
+                    'field' => $orm_field->name,
+                    'value' => $orm_field->value,
+                    'quote' => TRUE
+                );
             }
+            
+            parent::$CI->{'db_'.$this->_namespace()}->set($input['field'], $input['value'], $input['quote']);
         }
-
-        return $input;
     }
 
     /**
-     * Modifie une variable
+     * Convertie la valeur d'une variable
      * @param mixe $name
      * @param mixe $value
      */
     public function __set($name, $value) {
-        if (isset(static::$fields[$name])) {
-            $this->_cast_field(new Orm_field(array(
-                'name' => $name,
-                'value' => $value,
-                'type' => static::$fields[$name]
-            )));
-        }
+        $this->_convert_type($name, $value);
     }
 
     /**
-     * Caste un tableau de variables
+     * Convertie les valeurs des variables
      * @param NULL|string $data
      * @return Orm_model
      */
-    private function _cast_fields(array $data) {
+    private function _convert_types(array $data) {
         foreach ($data as $name => $value) {
-            $this->_cast_field(new Orm_field(array(
-                'name' => $name,
-                'value' => $value,
-                'type' => static::$fields[$name]
-            )));
+            $this->_convert_type($name, $value);
         }
 
         return $this;
     }
-
-    private function _cast_field(Orm_field $field) {
-        // Caste l'objet
-        $field->cast();
-
-        // Met a jour la valeur de l'objet
-        $this->{$field->name} = $field->value;
+    
+    /**
+     * Convertie la valeur d'une variable
+     * @param mixe $name
+     * @param mixe $value
+     */
+    public function _convert_type($name, $value) {
+        // Configuration
+        $config = $this->_get_field($name);
+        
+        // Si la configuration n'existe pas
+        if ($config === FALSE)
+            return;
+        
+        // Initialise l'objet
+        $orm_field = new Orm_field($config);
+        
+        // Renseigne la valeur du champ
+        $orm_field->value = $value;
+        
+        // Convertie la valeur du champ
+        $this->{$orm_field->name} = $orm_field->convert();
     }
 
     /**
@@ -172,7 +201,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where($key, $value = NULL, $escape = TRUE) {
-        parent::$CI->{'db_' . $this->_namespace()}->where($key, $value, $escape);
+        parent::$CI->{'db_'.$this->_namespace()}->where($key, $value, $escape);
 
         return $this;
     }
@@ -185,7 +214,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where_in($key = NULL, $values = NULL) {
-        parent::$CI->{'db_' . $this->_namespace()}->where_in($key, $values);
+        parent::$CI->{'db_'.$this->_namespace()}->where_in($key, $values);
 
         return $this;
     }
@@ -198,7 +227,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function like($field, $match = '', $side = 'both') {
-        parent::$CI->{'db_' . $this->_namespace()}->like($field, $match, $side);
+        parent::$CI->{'db_'.$this->_namespace()}->like($field, $match, $side);
 
         return $this;
     }
@@ -209,7 +238,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function group_by($by) {
-        parent::$CI->{'db_' . $this->_namespace()}->group_by($by);
+        parent::$CI->{'db_'.$this->_namespace()}->group_by($by);
 
         return $this;
     }
@@ -222,7 +251,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function having($key, $value = '', $escape = TRUE) {
-        parent::$CI->{'db_' . $this->_namespace()}->having($key, $value, $escape);
+        parent::$CI->{'db_'.$this->_namespace()}->having($key, $value, $escape);
 
         return $this;
     }
@@ -234,7 +263,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function order_by($orderby, $direction = '') {
-        parent::$CI->{'db_' . $this->_namespace()}->order_by($orderby, $direction);
+        parent::$CI->{'db_'.$this->_namespace()}->order_by($orderby, $direction);
 
         return $this;
     }
@@ -246,7 +275,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function limit($value, $offset = '') {
-        parent::$CI->{'db_' . $this->_namespace()}->limit($value, $offset);
+        parent::$CI->{'db_'.$this->_namespace()}->limit($value, $offset);
 
         return $this;
     }
@@ -256,7 +285,7 @@ class Orm_model extends Orm {
      * @return int
      */
     public function count() {
-        return (int) parent::$CI->{'db_' . $this->_namespace()}->count_all_results(static::$table);
+        return (int) parent::$CI->{'db_'.$this->_namespace()}->count_all_results(static::$table);
     }
 
     /**
@@ -264,57 +293,55 @@ class Orm_model extends Orm {
      * @return array
      */
     protected function _data_find() {
+        $this->_select();
 
-        foreach ($this->_output() as $select)
-            parent::$CI->{'db_' . $this->_namespace()}->select($select[0], $select[1]);
-
-        parent::$CI->{'db_' . $this->_namespace()}->from(static::$table);
+        parent::$CI->{'db_'.$this->_namespace()}->from(static::$table);
 
         // Si le cache est activé
         if (parent::$config['cache']) {
-
-            $cache_id = 'orm_' . static::$table;
-            $cache_key = md5(parent::$CI->{'db_' . $this->_namespace()}->_compile_select());
+            $cache_id = 'orm_'.static::$table;
+            $cache_key = md5(parent::$CI->{'db_'.$this->_namespace()}->_compile_select());
 
             // Vérifie si le cache existe
             if (!$data = parent::$CI->cache->get($cache_id) OR ! isset($data[$cache_key])) {
 
                 $data = (is_array($data)) ? $data : array();
 
-                $data[$cache_key] = parent::$CI->{'db_' . $this->_namespace()}->get()->result_array();
+                $data[$cache_key] = parent::$CI->{'db_'.$this->_namespace()}->get()->result_array();
 
                 parent::$CI->cache->save($cache_id, $data, parent::$config['tts']);
             }
 
             // Vide la requete
-            parent::$CI->{'db_' . $this->_namespace()}->_reset_select();
+            parent::$CI->{'db_'.$this->_namespace()}->_reset_select();
 
             // Retoune les résultats en cache
             return $data[$cache_key];
         }
 
         // Retourne les résultats
-        return parent::$CI->{'db_' . $this->_namespace()}->get()->result_array();
+        return parent::$CI->{'db_'.$this->_namespace()}->get()->result_array();
     }
 
     /**
      * Cherche plusieurs objets
-     * @return boolean|array
+     * @return array
      */
     public function find() {
         $objects = array();
-
+        
+        // Répuère les objets
         $data = $this->_data_find();
-
-        if (is_numeric($data))
-            return array($data);
-
+        
+        // Si aucun résultat trouvé
         if (empty($data))
-            return FALSE;
-
+            return array();
+        
+        // Convertie les champs des objets
         foreach ($data as $value)
-            $objects[] = clone $this->_cast_fields($value);
-
+            $objects[] = clone $this->_convert_types($value);
+        
+        // Retoune les objets
         return $objects;
     }
 
@@ -323,11 +350,14 @@ class Orm_model extends Orm {
      * @return boolean|objet
      */
     public function find_one() {
-        parent::$CI->{'db_' . $this->_namespace()}->limit(1);
-
+        // Limite la requête a un objet
+        parent::$CI->{'db_'.$this->_namespace()}->limit(1);
+        
+        // Exécute la requête
         $data = $this->find();
 
-        return (isset($data[0])) ? $data[0] : FALSE;
+        // Retoune le premier résultat
+        return (isset($data[0])) ? $data[0] : array();
     }
 
     /**
@@ -336,26 +366,37 @@ class Orm_model extends Orm {
      * @return boolean
      */
     public function save($force_insert = FALSE) {
-        if (count(get_object_vars($this)) === 0)
-            return FALSE;
+        // Initialisation de l'objet table
+        $orm_table = new Orm_table(static::$table);
+        
+        // Initialisation de l'objet clé primaire
+        $orm_primary_key = new Orm_primary_key(array(
+            'name' => static::$primary_key,
+            'value' => $this->{static::$primary_key}
+        ));
+        
+        // Suppression du cache
+        if (parent::$config['cache'])
+            parent::$CI->cache->delete('orm_'.$orm_table->name);
+        
+        // Définition de la table
+        parent::$CI->{'db_'.$this->_namespace()}->from($orm_table->name);
 
-        if (parent::$config['cache']) {
-            $file = 'orm_' . static::$table;
-
-            if (file_exists(APPPATH . 'cache/' . $file))
-                parent::$CI->cache->delete($file);
-        }
-
-        parent::$CI->{'db_' . $this->_namespace()}->from(static::$table);
-
-        foreach ($this->_input(get_object_vars($this)) as $set)
-            parent::$CI->{'db_' . $this->_namespace()}->set($set[0], $set[1], $set[2]);
-
-        if (isset($this->{static::$primary_key}) && !empty($this->{static::$primary_key}) && $force_insert === FALSE) {
-            return parent::$CI->{'db_' . $this->_namespace()}->where(static::$primary_key, $this->{static::$primary_key})->update();
+        // Prépare les champs a mette a jour
+        $this->_update(get_object_vars($this));
+        
+        // Si c'est une insertion
+        if ( ! empty($orm_primary_key->value) && $force_insert === FALSE) {
+            // Exécute la requête
+            return parent::$CI->{'db_'.$this->_namespace()}->where($orm_primary_key->name, $orm_primary_key->value)->update();
+            
+        // Si c'est un update
         } else {
-            parent::$CI->{'db_' . $this->_namespace()}->insert();
-            return $this->{static::$primary_key} = parent::$CI->{'db_' . $this->_namespace()}->insert_id();
+            // Exécute la requête
+            parent::$CI->{'db_'.$this->_namespace()}->insert();
+            
+            // Retourne l'id
+            return $this->{$orm_primary_key->name} = parent::$CI->{'db_'.$this->_namespace()}->insert_id();
         }
     }
 
@@ -364,22 +405,21 @@ class Orm_model extends Orm {
      * @return boolean
      */
     public function remove() {
-        if (count(get_object_vars($this)) == 0)
-            return FALSE;
-
-        if (!isset($this->{static::$primary_key}) || empty($this->{static::$primary_key}))
-            return FALSE;
-
-        if (parent::$config['cache']) {
-            $file = 'orm_' . static::$table;
-
-            if (file_exists(APPPATH . 'cache/' . $file))
-                parent::$CI->cache->delete($file);
-        }
-
-        return parent::$CI->{'db_' . $this->_namespace()}
-                        ->where(static::$primary_key, $this->{static::$primary_key})
-                        ->delete(static::$table);
+        // Initialisation de l'objet table
+        $orm_table = new Orm_table(static::$table);
+        
+        // Initialisation de l'objet clé primaire
+        $orm_primary_key = new Orm_primary_key(array(
+            'name' => static::$primary_key,
+            'value' => $this->{static::$primary_key}
+        ));
+        
+        // Supprime le cache
+        if (parent::$config['cache'])
+            parent::$CI->cache->delete('orm_'.static::$table);
+        
+        // Exécute la requête
+        return parent::$CI->{'db_'.$this->_namespace()}->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
     }
 
     /**
@@ -389,19 +429,57 @@ class Orm_model extends Orm {
      * @return boolean|Orm_model
      */
     public function __call($name, $argument) {
-        if (!property_exists(static::$table . '_model', 'relations'))
+        // Configuration
+        $config = $this->_get_association($name);
+        
+        // Si la configuration n'existe pas
+        if ($config === FALSE)
             return FALSE;
-
-        if (!isset(static::$relations[$name][0]))
+        
+        // Initialisation de l'objet association
+        $orm_association = new Orm_association($config);
+        
+        // Associe le modèle en cours
+        $orm_association->associated_model($this);
+        
+        // Retoune le nouveau modèle associé
+        return $orm_association->create_model();
+    }
+    
+    protected function _get_field($name) {
+        if (empty(static::$fields))
             return FALSE;
-
-        $class_model = static::$relations[$name][1] . '_model';
-
-        return new $class_model(new Orm_association(array(
-            'field' => static::$relations[$name][2],
-            'value' => $this->{static::$relations[$name][3]},
-            'type' => static::$relations[$name][0]
-        )));
+        
+        foreach (static::$fields as $field) {
+            if ($field['name'] == $name)
+                return $field;
+        }
+        
+        return FALSE;
+    }
+    
+    protected function _get_association($association_key) {
+        if (empty(static::$associations))
+            return FALSE;
+        
+        foreach (static::$associations as $association) {
+            if ($association['association_key'] == $association_key)
+                return $association;
+        }
+        
+        return FALSE;
+    }
+    
+    protected function _get_validation($field) {
+        if (empty(static::$validations))
+            return FALSE;
+        
+        foreach (static::$validations as $validation) {
+            if ($validation['field'] == $field)
+                return $validation;
+        }
+        
+        return FALSE;
     }
 
     /**
@@ -409,8 +487,8 @@ class Orm_model extends Orm {
      * @param Orm_primary_key $primary_key
      * @return Orm_model
      */
-    protected function primary_key(Orm_primary_key $primary_key) {
-        return $this->where($primary_key->field, $primary_key->value)->find_one();
+    protected function _find_primary_key(Orm_primary_key $primary_key) {
+        return $this->where($primary_key->name, $primary_key->value)->find_one();
     }
 
     /**
@@ -418,43 +496,22 @@ class Orm_model extends Orm {
      * @param Orm_association $association
      * @return Orm_model
      */
-    protected function functionName($param) {
-        
-    } function association(Orm_association $association) {
+    protected function _association(Orm_association $association) {
         switch ($association->type) {
             case Orm_association::TYPE_HAS_ONE:
-                parent::$CI->{'db_' . $this->_namespace()}->where($association->field, $association->value)->limit(1);
+                parent::$CI->{'db_'.$this->_namespace()}->where($association->primary_key, $association->value)->limit(1);
                 break;
             case Orm_association::TYPE_HAS_MANY:
-                parent::$CI->{'db_' . $this->_namespace()}->where($association->field, $association->value);
+                parent::$CI->{'db_'.$this->_namespace()}->where($association->primary_key, $association->value);
                 break;
             case Orm_association::TYPE_BELONGS_TO:
-                parent::$CI->{'db_' . $this->_namespace()}->where($association->field, $association->value)->limit(1);
+                parent::$CI->{'db_'.$this->_namespace()}->where($association->primary_key, $association->value)->limit(1);
                 break;
         }
 
         return $this;
     }
-    
-    public function validate() {
-        $validate = array();
-        
-        if (empty(static::$validations))
-            return $validate;
-        
-        foreach (static::$validations as $validation) {
-            
-            new Orm_validate(new Orm_field(), new Orm_validation());
-            
-            //$validate[''] = '';
-        }
-        
-        return $validate;
-    }
-    
-    public function is_valid() {
-        return empty($this->validate());
-    }
+
 }
 
 /* End of file Orm_model.php */

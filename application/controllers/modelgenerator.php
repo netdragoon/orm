@@ -9,7 +9,7 @@ if (!defined('BASEPATH'))
  * has_many     : un groupe a plusieurs membres
  * belongs_to   : plusieurs vidéos appartiennent à une utilisateur (id_user dans users_videos)
  */
-class Modelgenerator extends CI_Controller {
+class modelgenerator extends CI_Controller {
 
 	private $override = array();
 	private $association = array();
@@ -127,7 +127,7 @@ class Modelgenerator extends CI_Controller {
 
 						// STOCKAGE DES RELATION INVERSES						
 						$referenced_table_name_t = strtolower($table['Name']);
-						$this->association[$referenced_table_name]['php'][] = "\t\t'$referenced_table_name_t' => array('{$relation_inverse[$relation_type]}', '{$table['Name']}', '{$data["COLUMN_NAME"]}', 'id'),\r\n";
+						$this->association[$referenced_table_name]['php'][] = "\t\tarray('association_key' => '$referenced_table_name_t', 'model' => '{$table['Name']}_model', 'type' => '{$relation_inverse[$relation_type]}', 'primary_key' => 'id', 'foreign_key' => '{$data["COLUMN_NAME"]}'),\r\n";
 						$this->association[$referenced_table_name]['javadoc'][] = "\t * @method $namespace\\{$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
 					}
 				}
@@ -193,6 +193,8 @@ class Modelgenerator extends CI_Controller {
 
 				foreach ($query_field->result_array() as $field) {
 					$type = explode('(', $field['Type']);
+                    
+                    $type_date = NULL;
 
 					switch ($type[0]) {
 						case 'bigint':
@@ -206,9 +208,14 @@ class Modelgenerator extends CI_Controller {
 						case 'double':
 							$type[0] = 'float';
 							break;
-						case 'timestamp':
+                        case 'timestamp':
+                            $type_date = 'Y-m-d H:i:s';
 						case 'date':
+                           $type_date = 'Y-m-d';
 						case 'datetime':
+                            $type_date = 'Y-m-d H:i:s';
+                            $type[0] = 'date';
+                            break;
 						default:
 							$type[0] = 'string';
 							break;
@@ -219,32 +226,48 @@ class Modelgenerator extends CI_Controller {
 					//Gestion des description des champs dans le commentaire de celui ci
 					//Exemple encrypt ou has_one pour les relations
 
-					$valeurfield = '';
+					$allow_null = false;
+					$encrypt = false;
+                    
 					if ($field['Null'] == 'YES')
-						$valeurfield .= '|NULL';
+						$allow_null = true;
 
 					$tabField = explode('|', $field['Comment']);
 					foreach ($tabField as $fieldAjout) {
 						switch ($fieldAjout) {
 							case 'encrypt':
-								$valeurfield .= '|encrypt';
+								$encrypt = true;
 								break;
 						}
 					}
+                    
+                    $fields_buffer .= "\t\tarray(";
 
 					$fields_javadoc_type = ($type[0] === "int") ? "integer" : $type[0];
 					$fields_javadoc_buffer .= "\t * @property $fields_javadoc_type \${$field['Field']}\r\n";
-					$fields_buffer .= "\t\t'{$field['Field']}' => '{$type[0]}$valeurfield',\r\n";
-
-					if ($field['Key'] == 'PRI') {
+                    
+					$fields_buffer .= "'name' => '{$field['Field']}', 'type' => '{$type[0]}'";
+                    
+                    if ( ! empty($type_date))
+                        $fields_buffer .= ", 'date_format' => '$type_date'";
+                    
+                    if ($allow_null)
+                        $fields_buffer .= ", 'allow_null' => true";
+                    
+                    if ($encrypt)
+                        $fields_buffer .= ", 'encrypt' => true";
+                    
+					if ($field['Key'] == 'PRI')
 						$primary_keys .= "\r\n\t".'public static $primary_key = \''.$field['Field'].'\';'."\r\n";
-					}
+                    
 					if ($field['Key'] == 'MUL') {
 						$foreign_keys .= "\t\t".'"'.$field['Field'].'"'.",\r\n";
 						$flag_foreign_keys = true;
 					}
+                    
+                    $fields_buffer .= "),\r\n";
 				}
-
+                
 				$fields_javadoc_buffer .= "\t */\r\n";
 
 				$this->_append($fields_javadoc_buffer);
@@ -260,8 +283,6 @@ class Modelgenerator extends CI_Controller {
 				}
 				$foreign_keys.="\r\n\t);\r\n";
 				$this->_append($primary_keys);
-
-				//$this->_append($foreign_keys);
 			}
 
 			$this->_append("\r\n");
@@ -312,7 +333,7 @@ class Modelgenerator extends CI_Controller {
 
 					if ($relation_type != "") {
 						$relations_javadoc_buffer .= "\t * @method $namespace\\{$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
-						$relations_buffer .= "\t\t'$referenced_table_name' => array('$relation_type', '$referenced_table_name', '$referenced_column_name', '$column_name'),\r\n";
+                        $relations_buffer .= "\t\tarray('association_key' => '$referenced_table_name', 'model' => '{$referenced_table_name}_model', 'type' => '$relation_type', 'primary_key' => '$referenced_column_name', 'foreign_key' => '$column_name'),\r\n";
 					}
 				}
 

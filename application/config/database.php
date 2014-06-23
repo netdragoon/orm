@@ -64,5 +64,21 @@ $db['kraken']['swap_pre'] = '';
 $db['kraken']['autoinit'] = FALSE;
 $db['kraken']['stricton'] = FALSE;
 
+$db['sanctuary']['hostname'] = '192.168.1.106';
+$db['sanctuary']['username'] = 'yoann.vanitou';
+$db['sanctuary']['password'] = '35)V]7wfyJ';
+$db['sanctuary']['database'] = 'sanctuary';
+$db['sanctuary']['dbdriver'] = 'mysqli';
+$db['sanctuary']['dbprefix'] = '';
+$db['sanctuary']['pconnect'] = FALSE;
+$db['sanctuary']['db_debug'] = TRUE;
+$db['sanctuary']['cache_on'] = FALSE;
+$db['sanctuary']['cachedir'] = '';
+$db['sanctuary']['char_set'] = 'utf8';
+$db['sanctuary']['dbcollat'] = 'utf8_general_ci';
+$db['sanctuary']['swap_pre'] = '';
+$db['sanctuary']['autoinit'] = FALSE;
+$db['sanctuary']['stricton'] = FALSE;
+
 /* End of file database.php */
 /* Location: ./application/config/database.php */
