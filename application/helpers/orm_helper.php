@@ -6,8 +6,8 @@
  */
 function orm_autoload($class) {
 	if (strstr($class, '_model') !== FALSE) {
-		$file_path = FCPATH.APPPATH.'models/'.$class.'.php';
-								
+		$file_path = str_replace('\\', '/', FCPATH.APPPATH.'models/'.$class.'.php');
+        
 		if (is_file($file_path))
 			include_once($file_path);
 	}
