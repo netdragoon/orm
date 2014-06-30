@@ -178,19 +178,6 @@ class Orm_model extends Orm {
         // Retoune le nouveau modèle associé
         return $orm_association->create_model();
     }
-
-    /**
-     * Convertie les valeurs des variables
-     * @param array $data
-     * @return Orm_model
-     */
-    private function _convert_all(array $data) {
-        foreach ($data as $name => $value) {
-            $this->_convert($name, $value);
-        }
-
-        return $this;
-    }
     
     /**
      * Convertie la valeur d'une variable
