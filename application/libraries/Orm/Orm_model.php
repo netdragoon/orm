@@ -311,7 +311,9 @@ class Orm_model extends Orm {
      * Recherche en base de donnée
      * @return array
      */
-    protected function _data_find() {
+    protected function _result() {
+        $class_name = get_class($this);
+        
         // Initialisation de l'objet table
         $orm_table = new Orm_table(static::$table);
         
@@ -333,7 +335,7 @@ class Orm_model extends Orm {
                 $data = (is_array($data)) ? $data : array();
                 
                 // Exécute la requête
-                $data[$cache_key] = parent::$CI->{$this->_db()}->get()->result_array();
+                $data[$cache_key] = parent::$CI->{$this->_db()}->get()->result($class_name);
 
                 // Sauvegarde les résultats en cache
                 parent::$CI->cache->save($cache_id, $data, parent::$config['tts']);
@@ -347,7 +349,7 @@ class Orm_model extends Orm {
         }
 
         // Retourne les résultats sans cache
-        return parent::$CI->{$this->_db()}->get()->result_array();
+        return parent::$CI->{$this->_db()}->get()->result($class_name);
     }
 
     /**
@@ -355,18 +357,12 @@ class Orm_model extends Orm {
      * @return array
      */
     public function find() {
-        $objects = array();
-        
         // Répuère les objets
-        $data = $this->_data_find();
+        $objects = $this->_result();
         
         // Si aucun résultat trouvé
-        if (empty($data))
+        if (empty($objects))
             return array();
-        
-        // Convertie les champs des objets
-        foreach ($data as $value)
-            $objects[] = clone $this->_convert_all($value);
         
         // Retoune les objets
         return $objects;
@@ -374,7 +370,7 @@ class Orm_model extends Orm {
 
     /**
      * Cherche un objet
-     * @return boolean|objet
+     * @return null|objet
      */
     public function find_one() {
         // Limite la requête a un objet
@@ -384,7 +380,7 @@ class Orm_model extends Orm {
         $data = $this->find();
 
         // Retoune le premier résultat
-        return (isset($data[0])) ? $data[0] : array();
+        return (isset($data[0])) ? $data[0] : NULL;
     }
 
     /**
