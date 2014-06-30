@@ -29,10 +29,6 @@ class Orm_model extends Orm {
         // Si la variable $data est une instance de la classe Orm_association
         } else if ($data instanceof Orm_association) {
             $this->_association_find($data);
-            
-        // Retourne l'instance
-        } else {
-            return $this;
         }
     }
 
