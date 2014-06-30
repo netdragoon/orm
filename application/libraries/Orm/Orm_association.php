@@ -20,13 +20,13 @@ class Orm_association {
     public $foreign_key;
     public $value;
 
-    public function __construct(array $config, $value) {
+    public function __construct(array $config, Orm_model $model) {
         foreach ($config as $config_key => $config_value) {
             if (isset($this->{$config_key}))
                 $this->{$config_key} = $config_value;
         }
         
-        $this->value = (int)$value;
+        $this->value = (int)$model->id;
 
         if (empty($type->model))
             $this->model = $this->association_key . '_model';
@@ -38,11 +38,7 @@ class Orm_association {
             $this->foreign_key = $this->association_key . '_id';
     }
 
-    public function associated_model(Orm_model $model) {
-        $this->value = $model->id;
-    }
-
-    public function create_model() {
+    public function associated() {
         return new $this->model($this);
     }
 

@@ -24,10 +24,7 @@ class Orm_model extends Orm {
 
         // Si la variable $data est un entier, c'est une clé primaire
         if (is_numeric($data)) {
-            return $this->_primary_key_find(new Orm_primary_key(array(
-                'name' => static::$primary_key,
-                'value' => $data
-            )));
+            return $this->_primary_key_find(new Orm_primary_key(static::$primary_key, $data));
 
             // Si la variable $data est une instance de la classe Orm_association
         } else if ($data instanceof Orm_association) {
@@ -68,9 +65,9 @@ class Orm_model extends Orm {
     private function _select() {
         $output = array();
 
-        foreach (static::$fields as $field) {
+        foreach (static::$fields as $config) {
             
-            $orm_field = new Orm_field($field);
+            $orm_field = new Orm_field($config);
             
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $output = array(
@@ -107,10 +104,7 @@ class Orm_model extends Orm {
                 return;
             
             // Initialise l'objet champ
-            $orm_field = new Orm_field($config);
-            
-            // Renseigne la valeur du champ
-            $orm_field->value = $value;
+            $orm_field = new Orm_field($config, $value);
 
             // Si c'est un champ qu'on doit crypter
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
@@ -170,13 +164,10 @@ class Orm_model extends Orm {
             return $config;
         
         // Initialisation de l'objet association
-        $orm_association = new Orm_association($config);
-        
-        // Associe le modèle en cours
-        $orm_association->associated_model($this);
-        
+        $orm_association = new Orm_association($config, $this);
+
         // Retoune le nouveau modèle associé
-        return $orm_association->create_model();
+        return $orm_association->associated();
     }
     
     /**
@@ -190,10 +181,7 @@ class Orm_model extends Orm {
             return $config;
         
         // Initialise l'objet
-        $orm_field = new Orm_field($config);
-        
-        // Renseigne la valeur du champ
-        $orm_field->value = $value;
+        $orm_field = new Orm_field($config, $value);
         
         // Convertie la valeur du champ
         $this->{$orm_field->name} = $orm_field->convert();
@@ -380,10 +368,7 @@ class Orm_model extends Orm {
         $orm_table = new Orm_table(static::$table);
         
         // Initialisation de l'objet clé primaire
-        $orm_primary_key = new Orm_primary_key(array(
-            'name' => static::$primary_key,
-            'value' => $this->{static::$primary_key}
-        ));
+        $orm_primary_key = new Orm_primary_key(static::$primary_key, $this->{static::$primary_key});
         
         // Suppression du cache
         if (parent::$config['cache'])
@@ -419,10 +404,7 @@ class Orm_model extends Orm {
         $orm_table = new Orm_table(static::$table);
         
         // Initialisation de l'objet clé primaire
-        $orm_primary_key = new Orm_primary_key(array(
-            'name' => static::$primary_key,
-            'value' => $this->{static::$primary_key}
-        ));
+        $orm_primary_key = new Orm_primary_key(static::$primary_key,$this->{static::$primary_key});
         
         // Supprime le cache
         if (parent::$config['cache'])

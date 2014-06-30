@@ -32,7 +32,7 @@ class Orm_field {
     public $default_value;
     public $value;
 
-    public function __construct(array $config, $value) {
+    public function __construct(array $config, $value = '') {
         foreach ($config as $config_key => $config_value) {
             if (isset($this->{$config_key}))
                 $this->{$config_key} = $config_value;
