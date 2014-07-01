@@ -22,8 +22,7 @@ class Orm_association {
 
     public function __construct(array $config, Orm_model $model) {
         foreach ($config as $config_key => $config_value) {
-            if (isset($this->{$config_key}))
-                $this->{$config_key} = $config_value;
+            $this->{$config_key} = $config_value;
         }
         
         $this->value = (int)$model->id;

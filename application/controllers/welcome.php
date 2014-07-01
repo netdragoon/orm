@@ -5,7 +5,11 @@ class Welcome extends CI_Controller {
 	public function index() {
 		$this->load->library('orm');
 		
-		new kraken\project_model();
+		$test = new kraken\project_model();
+        
+        var_dump($test->where('id', 1)->find_one());
+        
+        $this->output->enable_profiler(TRUE);
 	}
 }
 

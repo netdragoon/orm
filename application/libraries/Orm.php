@@ -7,6 +7,7 @@
  * @link https://github.com/maltyxx/sag-orm
  * @version 2.9 (20140611)
  */
+require_once(__DIR__.'/Orm/Orm_table.php');
 require_once(__DIR__.'/Orm/Orm_primary_key.php');
 require_once(__DIR__.'/Orm/Orm_field.php');
 require_once(__DIR__.'/Orm/Orm_association.php');

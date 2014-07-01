@@ -9,7 +9,7 @@ if (!defined('BASEPATH'))
  * has_many     : un groupe a plusieurs membres
  * belongs_to   : plusieurs vidéos appartiennent à une utilisateur (id_user dans users_videos)
  */
-class modelgenerator extends CI_Controller {
+class Modelgenerator extends CI_Controller {
 
 	private $override = array();
 	private $association = array();

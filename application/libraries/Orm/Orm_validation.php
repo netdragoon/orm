@@ -32,9 +32,7 @@ class Orm_validation {
 
     public function __construct(array $config, $value) {
         foreach ($config as $config_key => $config_value) {
-            if (isset($this->{$config_key})) {
-                $this->{$config_key} = $config_value;
-            }
+            $this->{$config_key} = $config_value;
         }
         
         $this->value = $value;

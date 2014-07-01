@@ -100,7 +100,7 @@ class Orm_model extends Orm {
         // on boucle sur tous les champs de la table
         foreach ($data as $name => $value) {
             // Si la configuration n'existe pas
-            if ($config = $this->_get_config_field($name) === FALSE)
+            if (($config = $this->_get_config_field($name)) === FALSE)
                 return;
             
             // Initialise l'objet champ
@@ -148,7 +148,7 @@ class Orm_model extends Orm {
      * @param mixe $name
      * @param mixe $value
      */
-    public function __set($name, $value) {
+    public function __set($name, $value) {        
         $this->_convert($name, $value);
     }
     
@@ -160,7 +160,7 @@ class Orm_model extends Orm {
      */
     public function __call($name, $argument) {
         // Si la configuration n'existe pas
-        if ($config = $this->_get_config_association($name) === FALSE)
+        if (($config = $this->_get_config_association($name)) === FALSE)
             return $config;
         
         // Initialisation de l'objet association
@@ -175,14 +175,14 @@ class Orm_model extends Orm {
      * @param mixe $name
      * @param mixe $value
      */
-    private function _convert($name, $value) {
+    private function _convert($name, $value) {        
         // Si la configuration n'existe pas
-        if ($config = $this->_get_config_field($name) === FALSE)
+        if (($config = $this->_get_config_field($name)) === FALSE)
             return $config;
-        
+                        
         // Initialise l'objet
         $orm_field = new Orm_field($config, $value);
-        
+                        
         // Convertie la valeur du champ
         $this->{$orm_field->name} = $orm_field->convert();
     }
@@ -322,7 +322,7 @@ class Orm_model extends Orm {
             // Retoune les résultats en cache
             return $data[$cache_key];
         }
-
+        
         // Retourne les résultats sans cache
         return parent::$CI->{$this->_db()}->get()->result($class_name);
     }
@@ -352,10 +352,10 @@ class Orm_model extends Orm {
         parent::$CI->{$this->_db()}->limit(1);
         
         // Exécute la requête
-        $data = $this->find();
-
+        $objects = $this->find();
+        
         // Retoune le premier résultat
-        return (isset($data[0])) ? $data[0] : NULL;
+        return (isset($objects[0])) ? $objects[0] : NULL;
     }
 
     /**
@@ -414,12 +414,12 @@ class Orm_model extends Orm {
         return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
     }
     
-    protected function _get_config_field($name) {
+    protected function _get_config_field($name) {        
         if (empty(static::$fields))
             return FALSE;
         
         foreach (static::$fields as $field) {
-            if ($field['name'] == $name)
+            if ($field['name'] === $name)
                 return $field;
         }
         
