@@ -8,6 +8,12 @@
  * @version 3.0 (20140611)
  */
 class Orm_model extends Orm {
+    
+    protected $_fields = array();
+    
+    protected $_update = array();
+    
+    protected $_namespace = NULL;
 
     /**
      * Constructeur
@@ -15,6 +21,8 @@ class Orm_model extends Orm {
      * @return object|
      */
     function __construct($data = NULL) {
+        
+        $this->_namespace();
 
         // Connection à la base de donnée
         $this->_connect();
@@ -34,22 +42,22 @@ class Orm_model extends Orm {
 
     protected function _namespace() {
         $namespace = explode('\\', get_class($this));
-        return $namespace[0];
+        $this->_namespace = $namespace[0];
     }
     
     protected function _db() {
-        return 'db_'.$this->_namespace();
+        return 'db_'.$this->_namespace;
     }
 
     /**
      * Créer les variables dans le modèle
      * @return
      */
-    protected function _connect() {
+    protected function _connect() {  
         // Si il exite une connxion		
         if (!isset(parent::$CI->{$this->_db()})) {
             // Nouvelle connexion
-            parent::$CI->{$this->_db()} = parent::$CI->load->database($this->_namespace(), TRUE);
+            parent::$CI->{$this->_db()} = parent::$CI->load->database($this->_namespace, TRUE);
         }
     }
 
@@ -57,9 +65,9 @@ class Orm_model extends Orm {
      * Créer les variables dans le modèle
      * @return
      */
-    protected function _generate() {
+    protected function _generate() {       
         foreach (static::$fields as $field)
-            $this->{$field['name']} = '';
+            $this->_fields[$field['name']] = NULL;
     }
 
     private function _select() {
@@ -142,14 +150,44 @@ class Orm_model extends Orm {
             parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
         }
     }
+    
+    /**
+     * 
+     * @param type $name
+     * @return type
+     */
+    public function __isset($name) {
+        return isset($this->_fields[$name]);
+    }
+    
+    /**
+     * 
+     * @param type $name
+     */
+    public function __unset($name) {
+                
+    }
+    
+    /**
+     * 
+     * @param type $name
+     * @return boolean
+     */
+    public function __get($name) {
+        if ( ! array_key_exists($name, $this->_fields))
+            return FALSE;
+        
+        return $this->_fields[$name];
+    }
 
     /**
      * Convertie la valeur d'une variable
      * @param mixe $name
      * @param mixe $value
      */
-    public function __set($name, $value) {        
-        $this->_convert($name, $value);
+    public function __set($name, $value) {
+        if (array_key_exists($name, $this->_fields))
+            $this->_convert($name, $value);
     }
     
     /**
@@ -175,16 +213,16 @@ class Orm_model extends Orm {
      * @param mixe $name
      * @param mixe $value
      */
-    private function _convert($name, $value) {        
+    private function _convert($name, $value) {
         // Si la configuration n'existe pas
         if (($config = $this->_get_config_field($name)) === FALSE)
             return $config;
                         
         // Initialise l'objet
         $orm_field = new Orm_field($config, $value);
-                        
+                                        
         // Convertie la valeur du champ
-        $this->{$orm_field->name} = $orm_field->convert();
+        $this->_fields[$orm_field->name] = $orm_field->convert();
     }
 
     /**
@@ -334,7 +372,7 @@ class Orm_model extends Orm {
     public function find() {
         // Répuère les objets
         $objects = $this->_result();
-        
+                
         // Si aucun résultat trouvé
         if (empty($objects))
             return array();
