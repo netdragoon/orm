@@ -9,7 +9,7 @@
  */
 class Orm_model extends Orm {
     
-    protected $_fields = array();
+    protected $_data = array();
     
     protected $_update = array();
     
@@ -32,7 +32,7 @@ class Orm_model extends Orm {
 
         // Si la variable $data est un entier, c'est une clé primaire
         if (is_numeric($data)) {
-            return $this->_primary_key_find(new Orm_primary_key(static::$primary_key, $data));
+            $this->_primary_key_find(new Orm_primary_key(static::$primary_key, $data));
 
         // Si la variable $data est une instance de la classe Orm_association
         } else if ($data instanceof Orm_association) {
@@ -67,7 +67,7 @@ class Orm_model extends Orm {
      */
     protected function _generate() {       
         foreach (static::$fields as $field)
-            $this->_fields[$field['name']] = NULL;
+            $this->_data[$field['name']] = NULL;
     }
 
     private function _select() {
@@ -149,6 +149,9 @@ class Orm_model extends Orm {
             
             parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
         }
+        
+        // Réinitialise les champs a mettre a jour
+        $this->_update[] = array();
     }
     
     /**
@@ -157,7 +160,7 @@ class Orm_model extends Orm {
      * @return type
      */
     public function __isset($name) {
-        return isset($this->_fields[$name]);
+        return isset($this->_data[$name]);
     }
     
     /**
@@ -174,10 +177,10 @@ class Orm_model extends Orm {
      * @return boolean
      */
     public function __get($name) {
-        if ( ! array_key_exists($name, $this->_fields))
+        if ( ! array_key_exists($name, $this->_data))
             return FALSE;
         
-        return $this->_fields[$name];
+        return $this->_data[$name];
     }
 
     /**
@@ -186,8 +189,12 @@ class Orm_model extends Orm {
      * @param mixe $value
      */
     public function __set($name, $value) {
-        if (array_key_exists($name, $this->_fields))
+        if (array_key_exists($name, $this->_data)) {
+            
             $this->_convert($name, $value);
+            
+            $this->_update[] = $name;
+        }
     }
     
     /**
@@ -222,7 +229,7 @@ class Orm_model extends Orm {
         $orm_field = new Orm_field($config, $value);
                                         
         // Convertie la valeur du champ
-        $this->_fields[$orm_field->name] = $orm_field->convert();
+        $this->_data[$orm_field->name] = $orm_field->convert();
     }
 
     /**
@@ -416,7 +423,7 @@ class Orm_model extends Orm {
         parent::$CI->{$this->_db()}->from($orm_table->name);
 
         // Prépare les champs a mette a jour
-        $this->_update(get_object_vars($this));
+        $this->_update($this->_data);
         
         // Si c'est une insertion
         if ( ! empty($orm_primary_key->value) && $force_insert === FALSE) {
@@ -494,7 +501,10 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     protected function _primary_key_find(Orm_primary_key $primary_key) {
-        return $this->where($primary_key->name, $primary_key->value)->find_one();
+        
+        $object = $this->where($primary_key->name, $primary_key->value)->find_one();
+       
+        $this->_data = $object->_data;
     }
 
     /**
