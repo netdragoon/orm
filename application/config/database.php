@@ -45,40 +45,25 @@
 | the active record class
 */
 
-$active_group = 'kraken';
+$active_group = 'default';
 $active_record = TRUE;
 
-$db['kraken']['hostname'] = '192.168.1.106';
-$db['kraken']['username'] = 'yoann.vanitou';
-$db['kraken']['password'] = '35)V]7wfyJ';
-$db['kraken']['database'] = 'kraken';
-$db['kraken']['dbdriver'] = 'mysqli';
-$db['kraken']['dbprefix'] = '';
-$db['kraken']['pconnect'] = FALSE;
-$db['kraken']['db_debug'] = TRUE;
-$db['kraken']['cache_on'] = FALSE;
-$db['kraken']['cachedir'] = '';
-$db['kraken']['char_set'] = 'utf8';
-$db['kraken']['dbcollat'] = 'utf8_general_ci';
-$db['kraken']['swap_pre'] = '';
-$db['kraken']['autoinit'] = FALSE;
-$db['kraken']['stricton'] = FALSE;
+$db['default']['hostname'] = '';
+$db['default']['username'] = '';
+$db['default']['password'] = '';
+$db['default']['database'] = '';
+$db['default']['dbdriver'] = 'mysqli';
+$db['default']['dbprefix'] = '';
+$db['default']['pconnect'] = FALSE;
+$db['default']['db_debug'] = TRUE;
+$db['default']['cache_on'] = FALSE;
+$db['default']['cachedir'] = '';
+$db['default']['char_set'] = 'utf8';
+$db['default']['dbcollat'] = 'utf8_general_ci';
+$db['default']['swap_pre'] = '';
+$db['default']['autoinit'] = FALSE;
+$db['default']['stricton'] = FALSE;
 
-$db['sanctuary']['hostname'] = '192.168.1.106';
-$db['sanctuary']['username'] = 'yoann.vanitou';
-$db['sanctuary']['password'] = '35)V]7wfyJ';
-$db['sanctuary']['database'] = 'sanctuary';
-$db['sanctuary']['dbdriver'] = 'mysqli';
-$db['sanctuary']['dbprefix'] = '';
-$db['sanctuary']['pconnect'] = FALSE;
-$db['sanctuary']['db_debug'] = TRUE;
-$db['sanctuary']['cache_on'] = FALSE;
-$db['sanctuary']['cachedir'] = '';
-$db['sanctuary']['char_set'] = 'utf8';
-$db['sanctuary']['dbcollat'] = 'utf8_general_ci';
-$db['sanctuary']['swap_pre'] = '';
-$db['sanctuary']['autoinit'] = FALSE;
-$db['sanctuary']['stricton'] = FALSE;
 
 /* End of file database.php */
 /* Location: ./application/config/database.php */
