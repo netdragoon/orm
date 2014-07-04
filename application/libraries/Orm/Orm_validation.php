@@ -14,7 +14,6 @@ class Orm_validation {
     const OPTION_TYPE_IP = 'ip';
     const OPTION_TYPE_INT = 'int';
     const OPTION_TYPE_FLOAT = 'float';
-    const OPTION_TYPE_REGEXP = 'regexp';
     const OPTION_TYPE_EXCLUSION = 'exclusion';
     const OPTION_TYPE_INCLUSION = 'inclusion';
     const OPTION_TYPE_FORMAT = 'format';
@@ -59,10 +58,6 @@ class Orm_validation {
         return filter_var($value, FILTER_VALIDATE_FLOAT);
     }
     
-    private function _regexp($value) {
-        return filter_var($value, FILTER_VALIDATE_REGEXP);
-    }
-
     private function _exclusion($value) {
         if ( ! is_array($this->list))
             return FALSE;
@@ -88,12 +83,9 @@ class Orm_validation {
         if (empty($value))
             return FALSE;
         
-        if (empty($this->min) && empty($this->max))
-            return FALSE;
-
         $length = strlen($value);
-
-        if (($length < $this->min) || ($length > $this->max)) {
+        
+        if (($this->min && $length < $this->min) || ($this->max && $length > $this->max)) {
             return FALSE;
         } else {
             return $value;
