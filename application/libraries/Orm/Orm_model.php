@@ -455,7 +455,7 @@ class Orm_model extends Orm {
 
         // Prépare les champs a mette a jour
         $this->_update($this->_data);
-        
+                
         // Si c'est une insertion
         if ( ! empty($orm_primary_key->value) && $force_insert === FALSE) {
             // Exécute la requête
