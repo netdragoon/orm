@@ -107,6 +107,11 @@ class Orm_model extends Orm {
 
         // on boucle sur tous les champs de la table
         foreach ($data as $name => $value) {
+            
+            // Si le champs n'est pas dans la liste on ne le met pas à jour
+            if ( ! in_array($name, $this->_update))
+                continue;
+            
             // Si la configuration n'existe pas
             if (($config = $this->_get_config_field($name)) === FALSE)
                 return;
@@ -150,8 +155,8 @@ class Orm_model extends Orm {
             parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
         }
         
-        // Réinitialise les champs a mettre a jour
-        $this->_update[] = array();
+        // Réinitialise les champs a mettre à jour
+        $this->_update = array();
     }
     
     /**
@@ -168,7 +173,6 @@ class Orm_model extends Orm {
      * @param type $name
      */
     public function __unset($name) {
-                
     }
     
     /**
@@ -189,10 +193,12 @@ class Orm_model extends Orm {
      * @param mixe $value
      */
     public function __set($name, $value) {
+        // Si le champ existe
         if (array_key_exists($name, $this->_data)) {
-            
+            // Cast la valeur
             $this->_convert($name, $value);
             
+            // Ajoute le champ a mettre à jour
             $this->_update[] = $name;
         }
     }
@@ -208,6 +214,8 @@ class Orm_model extends Orm {
         if (($config = $this->_get_config_association($name)) === FALSE)
             return $config;
         
+        
+        
         // Initialisation de l'objet association
         $orm_association = new Orm_association($config, $this);
 
@@ -220,7 +228,7 @@ class Orm_model extends Orm {
      * @param mixe $name
      * @param mixe $value
      */
-    private function _convert($name, $value) {
+    public function _convert($name, $value) {
         // Si la configuration n'existe pas
         if (($config = $this->_get_config_field($name)) === FALSE)
             return $config;
@@ -230,6 +238,31 @@ class Orm_model extends Orm {
                                         
         // Convertie la valeur du champ
         $this->_data[$orm_field->name] = $orm_field->convert();
+    }
+    
+    /**
+     * 
+     * @param array $results
+     * @return \Orm_model
+     */
+    private function _convert_all(array $results) {
+        $objects = array();
+        
+        foreach ($results as $result) {
+            // Clone l'object en cours
+            $object = clone $this;
+
+            foreach ($result as $name => $value)
+                $object->_convert($name, $value);
+            
+            $objects[] = $object;
+        }
+        
+        return $objects;
+    }
+    
+    public function get_namespace() {
+        return $this->_namespace;
     }
 
     /**
@@ -331,9 +364,7 @@ class Orm_model extends Orm {
      * Recherche en base de donnée
      * @return array
      */
-    protected function _result() {
-        $class_name = get_class($this);
-        
+    protected function _result() {        
         // Initialisation de l'objet table
         $orm_table = new Orm_table(static::$table);
         
@@ -355,7 +386,7 @@ class Orm_model extends Orm {
                 $data = (is_array($data)) ? $data : array();
                 
                 // Exécute la requête
-                $data[$cache_key] = parent::$CI->{$this->_db()}->get()->result($class_name);
+                $data[$cache_key] = parent::$CI->{$this->_db()}->get()->result_array();
 
                 // Sauvegarde les résultats en cache
                 parent::$CI->cache->save($cache_id, $data, parent::$config['tts']);
@@ -369,17 +400,17 @@ class Orm_model extends Orm {
         }
         
         // Retourne les résultats sans cache
-        return parent::$CI->{$this->_db()}->get()->result($class_name);
+        return parent::$CI->{$this->_db()}->get()->result_array();
     }
-
+    
     /**
      * Cherche plusieurs objets
      * @return array
      */
     public function find() {
-        // Répuère les objets
-        $objects = $this->_result();
-                
+        // Répuère les objets        
+        $objects = $this->_convert_all($this->_result());
+        
         // Si aucun résultat trouvé
         if (empty($objects))
             return array();
@@ -526,6 +557,26 @@ class Orm_model extends Orm {
         }
 
         return $this;
+    }
+    
+    public function validate() {
+        $error = array();
+        
+        if (empty(static::$validations))
+            return $error;
+        
+        foreach (static::$validations as $validation) {
+            if (($config = $this->_get_config_field($validation['field'])) === FALSE)
+                return;
+            
+            $orm_validation = new Orm_validation($validation);
+            $orm_field = new Orm_field($config, $this->_data[$validation['field']]);
+            
+            if ( ! $orm_validation->validate($orm_field))
+                $error[] = $orm_field;
+        }
+        
+        return $error;
     }
 
 }

@@ -12,9 +12,12 @@ class Orm_validation {
     const OPTION_TYPE_EMAIL = 'email';
     const OPTION_TYPE_URL = 'url';
     const OPTION_TYPE_IP = 'ip';
+    const OPTION_TYPE_INT = 'int';
+    const OPTION_TYPE_FLOAT = 'float';
+    const OPTION_TYPE_REGEXP = 'regexp';
     const OPTION_TYPE_EXCLUSION = 'exclusion';
-    const OPTION_TYPE_FORMAT = 'format';
     const OPTION_TYPE_INCLUSION = 'inclusion';
+    const OPTION_TYPE_FORMAT = 'format';
     const OPTION_TYPE_LENGTH = 'length';
     const OPTION_TYPE_PRESENCE = 'presence';
     const OPTION_TYPE_CALLBACK = 'callback';
@@ -30,12 +33,10 @@ class Orm_validation {
     public $list;
     public $matcher;
 
-    public function __construct(array $config, $value) {
+    public function __construct(array $config) {
         foreach ($config as $config_key => $config_value) {
             $this->{$config_key} = $config_value;
         }
-        
-        $this->value = $value;
     }
     
     private function _email($value) {
@@ -49,26 +50,50 @@ class Orm_validation {
     private function _ip($value) {
         return filter_var($value, FILTER_VALIDATE_IP);
     }
+    
+    private function _int($value) {
+        return filter_var($value, FILTER_VALIDATE_INT);
+    }
+    
+    private function _float($value) {
+        return filter_var($value, FILTER_VALIDATE_FLOAT);
+    }
+    
+    private function _regexp($value) {
+        return filter_var($value, FILTER_VALIDATE_REGEXP);
+    }
 
     private function _exclusion($value) {
-        return !in_array($value, $config);
+        if ( ! is_array($this->list))
+            return FALSE;
+        
+        return ! in_array($value, $this->list);
+    }
+    
+    private function _inclusion($value) {
+        if ( ! is_array($this->list))
+            return FALSE;
+        
+        return in_array($value, $this->list);
     }
 
     private function _format($value) {
-        preg_match($config, $value);
-    }
-
-    private function _inclusion($value) {
-        return in_array($value, $config);
+        if (empty($this->matcher))
+            return FALSE;
+        
+        return preg_match($this->matcher, $value);
     }
 
     private function _length($value) {
         if (empty($value))
             return FALSE;
+        
+        if (empty($this->min) && empty($this->max))
+            return FALSE;
 
         $length = strlen($value);
 
-        if (($length < $config['min']) || ($length > $config['max'])) {
+        if (($length < $this->min) || ($length > $this->max)) {
             return FALSE;
         } else {
             return $value;
@@ -82,15 +107,16 @@ class Orm_validation {
             return $value;
         }
     }
-
+    
+    /*
     private function _callback($value) {
         return all_user_func($value, $config);
     }
+    */
     
     public function validate(Orm_field $field) {
-        $method = "_$this->type";
         
-        if ($this->$method($field->value) === FALSE) {
+        if (call_user_func_array(array($this, "_$this->type"), array($field->value)) === FALSE) {
             return FALSE;
         }
         

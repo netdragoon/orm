@@ -302,7 +302,7 @@ class Modelgenerator extends CI_Controller {
 				$asso = true;
 
 				$relations_javadoc_buffer = "\t/**\r\n";
-				$relations_buffer = "\t public static \$relations = array(\r\n";
+				$relations_buffer = "\t public static \$associations = array(\r\n";
 				// écriture relation inverses
 				if (isset($this->association[$table['Name']])) {
 					foreach ($this->association[$table['Name']]['php'] as $rel) {

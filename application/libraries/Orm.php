@@ -11,6 +11,7 @@ require_once(__DIR__.'/Orm/Orm_table.php');
 require_once(__DIR__.'/Orm/Orm_primary_key.php');
 require_once(__DIR__.'/Orm/Orm_field.php');
 require_once(__DIR__.'/Orm/Orm_association.php');
+require_once(__DIR__.'/Orm/Orm_validation.php');
 require_once(__DIR__.'/Orm/Orm.php');
 require_once(__DIR__.'/Orm/Orm_model.php');
 
