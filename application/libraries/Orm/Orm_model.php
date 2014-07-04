@@ -559,11 +559,15 @@ class Orm_model extends Orm {
         return $this;
     }
     
+    /**
+     * 
+     * @return \Orm_field|array
+     */
     public function validate() {
-        $error = array();
+        $errors = array();
         
         if (empty(static::$validations))
-            return $error;
+            return $errors;
         
         foreach (static::$validations as $validation) {
             if (($config = $this->_get_config_field($validation['field'])) === FALSE)
@@ -573,10 +577,21 @@ class Orm_model extends Orm {
             $orm_field = new Orm_field($config, $this->_data[$validation['field']]);
             
             if ( ! $orm_validation->validate($orm_field))
-                $error[] = $orm_field;
+                $errors[] = $orm_field;
         }
         
-        return $error;
+        return $errors;
+    }
+    
+    /**
+     * 
+     * @return boolean
+     */
+    public function is_validate() {
+        // Validation
+        $errors = $this->validate();
+        
+        return empty($errors);
     }
 
 }
