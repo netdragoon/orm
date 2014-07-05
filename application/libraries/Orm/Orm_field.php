@@ -36,7 +36,7 @@ class Orm_field {
         foreach ($config as $config_key => $config_value) {
             $this->{$config_key} = $config_value;
         }
-                
+
         $this->value = $value;
 
         if (empty($this->type))

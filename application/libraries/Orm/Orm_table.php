@@ -1,4 +1,7 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
 /**
  * SAG ORM (objet relationnel mapping)
@@ -8,12 +11,13 @@
  * @version 2.9 (20140611)
  */
 class Orm_table {
-	
-	public $name;
-	
-	public function __construct($name) {
-		$this->name = $name;
-	}
+
+    public $name;
+
+    public function __construct($name) {
+        $this->name = $name;
+    }
+
 }
 
 /* End of file Orm_table.php */

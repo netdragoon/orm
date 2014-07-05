@@ -1,4 +1,7 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
 /**
  * SAG ORM (objet relationnel mapping)
@@ -37,7 +40,7 @@ class Orm_validation {
             $this->{$config_key} = $config_value;
         }
     }
-    
+
     private function _email($value) {
         return filter_var($value, FILTER_VALIDATE_EMAIL);
     }
@@ -49,42 +52,42 @@ class Orm_validation {
     private function _ip($value) {
         return filter_var($value, FILTER_VALIDATE_IP);
     }
-    
+
     private function _int($value) {
         return filter_var($value, FILTER_VALIDATE_INT);
     }
-    
+
     private function _float($value) {
         return filter_var($value, FILTER_VALIDATE_FLOAT);
     }
-    
+
     private function _exclusion($value) {
-        if ( ! is_array($this->list))
+        if (!is_array($this->list))
             return FALSE;
-        
-        return ! in_array($value, $this->list);
+
+        return !in_array($value, $this->list);
     }
-    
+
     private function _inclusion($value) {
-        if ( ! is_array($this->list))
+        if (!is_array($this->list))
             return FALSE;
-        
+
         return in_array($value, $this->list);
     }
 
     private function _format($value) {
         if (empty($this->matcher))
             return FALSE;
-        
+
         return preg_match($this->matcher, $value);
     }
 
     private function _length($value) {
         if (empty($value))
             return FALSE;
-        
+
         $length = strlen($value);
-        
+
         if (($this->min && $length < $this->min) || ($this->max && $length > $this->max)) {
             return FALSE;
         } else {
@@ -99,22 +102,22 @@ class Orm_validation {
             return $value;
         }
     }
-    
+
     /*
-    private function _callback($value) {
-        return all_user_func($value, $config);
-    }
-    */
-    
+      private function _callback($value) {
+      return all_user_func($value, $config);
+      }
+     */
+
     public function validate(Orm_field $field) {
-        
+
         if (call_user_func_array(array($this, "_$this->type"), array($field->value)) === FALSE) {
             return FALSE;
         }
-        
+
         return TRUE;
-        
     }
+
 }
 
 /* End of file Orm_validation.php */

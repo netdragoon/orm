@@ -1,4 +1,7 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
 /**
  * SAG ORM (objet relationnel mapping)
@@ -8,11 +11,9 @@
  * @version 3.0 (20140611)
  */
 class Orm_model extends Orm {
-    
+
     protected $_data = array();
-    
     protected $_update = array();
-    
     protected $_namespace = NULL;
 
     /**
@@ -21,7 +22,7 @@ class Orm_model extends Orm {
      * @return object|
      */
     function __construct($data = NULL) {
-        
+
         $this->_namespace();
 
         // Connection à la base de donnée
@@ -34,7 +35,7 @@ class Orm_model extends Orm {
         if (is_numeric($data)) {
             $this->_primary_key_find(new Orm_primary_key(static::$primary_key, $data));
 
-        // Si la variable $data est une instance de la classe Orm_association
+            // Si la variable $data est une instance de la classe Orm_association
         } else if ($data instanceof Orm_association) {
             $this->_association_find($data);
         }
@@ -44,16 +45,16 @@ class Orm_model extends Orm {
         $namespace = explode('\\', get_class($this));
         $this->_namespace = $namespace[0];
     }
-    
+
     protected function _db() {
-        return 'db_'.$this->_namespace;
+        return 'db_' . $this->_namespace;
     }
 
     /**
      * Créer les variables dans le modèle
      * @return
      */
-    protected function _connect() {  
+    protected function _connect() {
         // Si il exite une connxion		
         if (!isset(parent::$CI->{$this->_db()})) {
             // Nouvelle connexion
@@ -65,7 +66,7 @@ class Orm_model extends Orm {
      * Créer les variables dans le modèle
      * @return
      */
-    protected function _generate() {       
+    protected function _generate() {
         foreach (static::$fields as $field)
             $this->_data[$field['name']] = NULL;
     }
@@ -74,17 +75,17 @@ class Orm_model extends Orm {
         $output = array();
 
         foreach (static::$fields as $config) {
-            
+
             $orm_field = new Orm_field($config);
-            
+
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $output = array(
-                    'field' => "CONVERT(AES_DECRYPT(FROM_BASE64(`".$orm_field->name."`), UNHEX('".parent::$config['encryption_key']."'), UNHEX(`vector`)) USING 'utf8') AS `".$orm_field->name."`",
+                    'field' => "CONVERT(AES_DECRYPT(FROM_BASE64(`" . $orm_field->name . "`), UNHEX('" . parent::$config['encryption_key'] . "'), UNHEX(`vector`)) USING 'utf8') AS `" . $orm_field->name . "`",
                     'quote' => FALSE
                 );
             } else if (parent::$config['binary_enable'] && $orm_field->binary) {
                 $output = array(
-                    'field' => "TO_BASE64(`".$orm_field->name."`) AS `".$orm_field->name."`",
+                    'field' => "TO_BASE64(`" . $orm_field->name . "`) AS `" . $orm_field->name . "`",
                     'quote' => FALSE
                 );
             } else {
@@ -93,7 +94,7 @@ class Orm_model extends Orm {
                     'quote' => NULL
                 );
             }
-            
+
             parent::$CI->{$this->_db()}->select($output['field'], $output['quote']);
         }
     }
@@ -103,19 +104,19 @@ class Orm_model extends Orm {
         $vector_value = NULL;
 
         if (parent::$config['encryption_enable'])
-            $vector_value = ( ! empty($data['vector'])) ? $data['vector'] : random_string('unique');
+            $vector_value = (!empty($data['vector'])) ? $data['vector'] : random_string('unique');
 
         // on boucle sur tous les champs de la table
         foreach ($data as $name => $value) {
-            
+
             // Si le champs n'est pas dans la liste on ne le met pas à jour
-            if ( ! in_array($name, $this->_update))
+            if (!in_array($name, $this->_update))
                 continue;
-            
+
             // Si la configuration n'existe pas
             if (($config = $this->_get_config_field($name)) === FALSE)
                 return;
-            
+
             // Initialise l'objet champ
             $orm_field = new Orm_field($config, $value);
 
@@ -123,42 +124,42 @@ class Orm_model extends Orm {
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $input = array(
                     'field' => $orm_field->name,
-                    'value' => "TO_BASE64(AES_ENCRYPT('".parent::$CI->{$this->_db()}->escape_str($orm_field->value)."', UNHEX('".parent::$config['encryption_key']."'), UNHEX('".$vector_value."')))",
+                    'value' => "TO_BASE64(AES_ENCRYPT('" . parent::$CI->{$this->_db()}->escape_str($orm_field->value) . "', UNHEX('" . parent::$config['encryption_key'] . "'), UNHEX('" . $vector_value . "')))",
                     'quote' => FALSE
                 );
 
-            // Si c'est un champ vecteur
-            } else if (parent::$config['encryption_enable'] && $orm_field->name == 'vector') {                
+                // Si c'est un champ vecteur
+            } else if (parent::$config['encryption_enable'] && $orm_field->name == 'vector') {
                 $input = array(
                     'field' => $orm_field->name,
                     'value' => $vector_value,
                     'quote' => TRUE
                 );
 
-            // Si c'est un champ binaire
-            } else if (parent::$config['binary_enable'] && $orm_field->binary) {                
+                // Si c'est un champ binaire
+            } else if (parent::$config['binary_enable'] && $orm_field->binary) {
                 $input = array(
                     'field' => $orm_field->name,
-                    'value' => "FROM_BASE64('".parent::$CI->{$this->_db()}->escape_str($orm_field->value)."')",
+                    'value' => "FROM_BASE64('" . parent::$CI->{$this->_db()}->escape_str($orm_field->value) . "')",
                     'quote' => FALSE
                 );
 
-            // Par défaut
-            } else {                
+                // Par défaut
+            } else {
                 $input = array(
                     'field' => $orm_field->name,
                     'value' => $orm_field->value,
                     'quote' => TRUE
                 );
             }
-            
+
             parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
         }
-        
+
         // Réinitialise les champs a mettre à jour
         $this->_update = array();
     }
-    
+
     /**
      * 
      * @param type $name
@@ -167,23 +168,16 @@ class Orm_model extends Orm {
     public function __isset($name) {
         return isset($this->_data[$name]);
     }
-    
-    /**
-     * 
-     * @param type $name
-     */
-    public function __unset($name) {
-    }
-    
+
     /**
      * 
      * @param type $name
      * @return boolean
      */
     public function __get($name) {
-        if ( ! array_key_exists($name, $this->_data))
+        if (!array_key_exists($name, $this->_data))
             return FALSE;
-        
+
         return $this->_data[$name];
     }
 
@@ -197,12 +191,12 @@ class Orm_model extends Orm {
         if (array_key_exists($name, $this->_data)) {
             // Cast la valeur
             $this->_convert($name, $value);
-            
+
             // Ajoute le champ a mettre à jour
             $this->_update[] = $name;
         }
     }
-    
+
     /**
      * Passage d'objets en appelant la methode du nom de la relation
      * On peut passer en parametre des arguments pour filtrer le retour d'object
@@ -213,16 +207,14 @@ class Orm_model extends Orm {
         // Si la configuration n'existe pas
         if (($config = $this->_get_config_association($name)) === FALSE)
             return $config;
-        
-        
-        
+
         // Initialisation de l'objet association
         $orm_association = new Orm_association($config, $this);
 
         // Retoune le nouveau modèle associé
         return $orm_association->associated();
     }
-    
+
     /**
      * Convertie la valeur d'une variable
      * @param mixe $name
@@ -232,14 +224,14 @@ class Orm_model extends Orm {
         // Si la configuration n'existe pas
         if (($config = $this->_get_config_field($name)) === FALSE)
             return $config;
-                        
+
         // Initialise l'objet
         $orm_field = new Orm_field($config, $value);
-                                        
+
         // Convertie la valeur du champ
         $this->_data[$orm_field->name] = $orm_field->convert();
     }
-    
+
     /**
      * 
      * @param array $results
@@ -247,20 +239,20 @@ class Orm_model extends Orm {
      */
     private function _convert_all(array $results) {
         $objects = array();
-        
+
         foreach ($results as $result) {
             // Clone l'object en cours
             $object = clone $this;
 
             foreach ($result as $name => $value)
                 $object->_convert($name, $value);
-            
+
             $objects[] = $object;
         }
-        
+
         return $objects;
     }
-    
+
     public function get_namespace() {
         return $this->_namespace;
     }
@@ -364,27 +356,27 @@ class Orm_model extends Orm {
      * Recherche en base de donnée
      * @return array
      */
-    protected function _result() {        
+    protected function _result() {
         // Initialisation de l'objet table
         $orm_table = new Orm_table(static::$table);
-        
+
         // Prépare le select
         $this->_select();
-        
+
         // Prépare le from
         parent::$CI->{$this->_db()}->from($orm_table->name);
 
         // Si le cache est activé
         if (parent::$config['cache']) {
-            $cache_id = 'orm_'.$orm_table->name;
+            $cache_id = 'orm_' . $orm_table->name;
             $cache_key = md5(parent::$CI->{$this->_db()}->_compile_select());
 
             // Vérifie si le cache existe
             if (!$data = parent::$CI->cache->get($cache_id) OR ! isset($data[$cache_key])) {
-                
+
                 // récupère le cache existant
                 $data = (is_array($data)) ? $data : array();
-                
+
                 // Exécute la requête
                 $data[$cache_key] = parent::$CI->{$this->_db()}->get()->result_array();
 
@@ -398,11 +390,11 @@ class Orm_model extends Orm {
             // Retoune les résultats en cache
             return $data[$cache_key];
         }
-        
+
         // Retourne les résultats sans cache
         return parent::$CI->{$this->_db()}->get()->result_array();
     }
-    
+
     /**
      * Cherche plusieurs objets
      * @return array
@@ -410,11 +402,11 @@ class Orm_model extends Orm {
     public function find() {
         // Répuère les objets        
         $objects = $this->_convert_all($this->_result());
-        
+
         // Si aucun résultat trouvé
         if (empty($objects))
             return array();
-        
+
         // Retoune les objets
         return $objects;
     }
@@ -426,10 +418,10 @@ class Orm_model extends Orm {
     public function find_one() {
         // Limite la requête a un objet
         parent::$CI->{$this->_db()}->limit(1);
-        
+
         // Exécute la requête
         $objects = $this->find();
-        
+
         // Retoune le premier résultat
         return (isset($objects[0])) ? $objects[0] : NULL;
     }
@@ -442,30 +434,30 @@ class Orm_model extends Orm {
     public function save($force_insert = FALSE) {
         // Initialisation de l'objet table
         $orm_table = new Orm_table(static::$table);
-        
+
         // Initialisation de l'objet clé primaire
         $orm_primary_key = new Orm_primary_key(static::$primary_key, $this->{static::$primary_key});
-        
+
         // Suppression du cache
         if (parent::$config['cache'])
-            parent::$CI->cache->delete('orm_'.$orm_table->name);
-        
+            parent::$CI->cache->delete('orm_' . $orm_table->name);
+
         // Définition de la table
         parent::$CI->{$this->_db()}->from($orm_table->name);
 
         // Prépare les champs a mette a jour
         $this->_update($this->_data);
-                
+
         // Si c'est une insertion
-        if ( ! empty($orm_primary_key->value) && $force_insert === FALSE) {
+        if (!empty($orm_primary_key->value) && $force_insert === FALSE) {
             // Exécute la requête
             return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->update();
-            
-        // Si c'est un update
+
+            // Si c'est un update
         } else {
             // Exécute la requête
             parent::$CI->{$this->_db()}->insert();
-            
+
             // Retourne l'id
             return $this->{$orm_primary_key->name} = parent::$CI->{$this->_db()}->insert_id();
         }
@@ -478,51 +470,51 @@ class Orm_model extends Orm {
     public function remove() {
         // Initialisation de l'objet table
         $orm_table = new Orm_table(static::$table);
-        
+
         // Initialisation de l'objet clé primaire
-        $orm_primary_key = new Orm_primary_key(static::$primary_key,$this->{static::$primary_key});
-        
+        $orm_primary_key = new Orm_primary_key(static::$primary_key, $this->{static::$primary_key});
+
         // Supprime le cache
         if (parent::$config['cache'])
-            parent::$CI->cache->delete('orm_'.$orm_table);
-        
+            parent::$CI->cache->delete('orm_' . $orm_table);
+
         // Exécute la requête
         return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
     }
-    
-    protected function _get_config_field($name) {        
+
+    protected function _get_config_field($name) {
         if (empty(static::$fields))
             return FALSE;
-        
+
         foreach (static::$fields as $field) {
             if ($field['name'] === $name)
                 return $field;
         }
-        
+
         return FALSE;
     }
-    
+
     protected function _get_config_association($association_key) {
         if (empty(static::$associations))
             return FALSE;
-        
+
         foreach (static::$associations as $association) {
             if ($association['association_key'] == $association_key)
                 return $association;
         }
-        
+
         return FALSE;
     }
-    
+
     protected function _get_config_validation($field) {
         if (empty(static::$validations))
             return FALSE;
-        
+
         foreach (static::$validations as $validation) {
             if ($validation['field'] == $field)
                 return $validation;
         }
-        
+
         return FALSE;
     }
 
@@ -532,9 +524,9 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     protected function _primary_key_find(Orm_primary_key $primary_key) {
-        
+
         $object = $this->where($primary_key->name, $primary_key->value)->find_one();
-       
+
         $this->_data = $object->_data;
     }
 
@@ -558,31 +550,31 @@ class Orm_model extends Orm {
 
         return $this;
     }
-    
+
     /**
      * 
      * @return \Orm_field|array
      */
     public function validate() {
         $errors = array();
-        
+
         if (empty(static::$validations))
             return $errors;
-        
+
         foreach (static::$validations as $validation) {
             if (($config = $this->_get_config_field($validation['field'])) === FALSE)
                 return;
-            
+
             $orm_validation = new Orm_validation($validation);
             $orm_field = new Orm_field($config, $this->_data[$validation['field']]);
-            
-            if ( ! $orm_validation->validate($orm_field))
+
+            if (!$orm_validation->validate($orm_field))
                 $errors[] = $orm_field;
         }
-        
+
         return $errors;
     }
-    
+
     /**
      * 
      * @return boolean
@@ -590,7 +582,7 @@ class Orm_model extends Orm {
     public function is_validate() {
         // Validation
         $errors = $this->validate();
-        
+
         return empty($errors);
     }
 

@@ -1,4 +1,7 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
 /**
  * SAG ORM (objet relationnel mapping)
@@ -24,20 +27,20 @@ class Orm_association {
         foreach ($config as $config_key => $config_value) {
             $this->{$config_key} = $config_value;
         }
-        
-        $this->value = (int)$model->id;
-        
+
+        $this->value = (int) $model->id;
+
         if (empty($type->model)) {
-            $this->model = $model->get_namespace().'\\'.$this->association_key.'_model';
+            $this->model = $model->get_namespace() . '\\' . $this->association_key . '_model';
         } else {
-            $this->model = $model->get_namespace().'\\'.$this->model;
+            $this->model = $model->get_namespace() . '\\' . $this->model;
         }
-        
+
         if (empty($type->primary_key))
             $this->primary_key = 'id';
 
         if (empty($type->foreign_key))
-            $this->foreign_key = $this->association_key.'_id';
+            $this->foreign_key = $this->association_key . '_id';
     }
 
     public function associated() {
