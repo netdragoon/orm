@@ -80,6 +80,10 @@ class Orm_validation {
 
         return preg_match($this->matcher, $value);
     }
+    
+    private function _date($value) {        
+        return checkdate(date('m', strtotime($value)), date('d', strtotime($value)), date('Y', strtotime($value)));
+    }
 
     private function _length($value) {
         if (empty($value))
@@ -95,7 +99,7 @@ class Orm_validation {
     }
 
     private function _presence($value) {
-        if (empty($value) && $value !== 0) {
+        if (empty($value)) {
             return FALSE;
         } else {
             return $value;

@@ -1,7 +1,4 @@
-<?php
-
-if (!defined('BASEPATH'))
-	exit('No direct script access allowed');
+<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
  * Willy & Case & Yoann
@@ -21,8 +18,12 @@ class Modelgenerator extends CI_Controller {
 	public function __construct() {
 		parent::__construct();
 	}
+    
+    public function index() {
+        $this->run();
+    } 
 
-	private function _config() {
+    private function _config() {
 		// Fichier de configuration des bases de données
 		$file_db_env = APPPATH.'config/'.ENVIRONMENT.'/database.php';
 		$file_db = APPPATH.'config/database.php';
@@ -398,5 +399,5 @@ class Modelgenerator extends CI_Controller {
 
 }
 
-/* End of file model.php */
-/* Location: ./application/controllers/model.php */
+/* End of file modelgenerator.php */
+/* Location: ./application/controllers/modelgenerator.php */
