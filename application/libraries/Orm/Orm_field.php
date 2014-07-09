@@ -1,4 +1,4 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php if ( !  defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
  * SAG ORM (objet relationnel mapping)
@@ -14,11 +14,12 @@ class Orm_field {
     const TYPE_FLOAT = 'float';
     const TYPE_DOUBLE = self::TYPE_FLOAT;
     const TYPE_STRING = 'string';
-    const TYPE_DATE = self::TYPE_STRING;
-    const TYPE_DATETIME = self::TYPE_STRING;
+    const TYPE_DATE = 'date';
+    const DATEFORMAT = 'Y-m-d H:i:s';
     const ALLOWNULL = 'allow_null';
     const ENCRYPT = 'encrypt';
     const BINARY = 'binary';
+    const DEFAULTVALUE_NOW = 'now';
 
     public $name;
     public $type;
@@ -38,10 +39,14 @@ class Orm_field {
 
         if (empty($this->type))
             $this->type = self::TYPE_STRING;
-
-        if (empty($this->date_format))
+        
+        if ($this->type === self::TYPE_DATE && empty($this->date_format)) {
+            $this->date_format = self::DATEFORMAT;
+            
+        } else if (empty($this->date_format)) {
             $this->date_format = FALSE;
-
+        }
+        
         if (empty($this->encrypt))
             $this->encrypt = FALSE;
 
@@ -56,15 +61,21 @@ class Orm_field {
     }
 
     public function convert() {
-        if (!empty($this->default_value) && empty($this->value)) {
-            return $this->value = $this->default_value;
+        if ( ! empty($this->default_value) && empty($this->value)) {
+            
+            if ($this->type === self::TYPE_DATE && $this->default_value === self::DEFAULTVALUE_NOW) {
+                return $this->value = date($this->date_format);
+            
+            } else {
+                return $this->value = $this->default_value;
+            }
         }
 
         if ($this->allow_null === TRUE && empty($this->value)) {
             return $this->value = NULL;
         }
 
-        if (in_array($this->type, array(self::TYPE_DATE, self::TYPE_DATETIME)) && !empty($this->value) && !empty($this->date_format)) {
+        if ($this->type === self::TYPE_DATE && ! empty($this->value) && ! empty($this->date_format)) {
             return $this->value = date($this->date_format, strtotime($this->value));
         }
 

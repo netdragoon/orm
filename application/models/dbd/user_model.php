@@ -24,8 +24,8 @@ class user_model extends \Orm_model {
 		array('name' => 'password', 'type' => 'string'),
 		array('name' => 'lastname', 'type' => 'string'),
 		array('name' => 'firstname', 'type' => 'string'),
-		array('name' => 'dateinsert', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true),
-		array('name' => 'dateupdate', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true),
+		array('name' => 'dateinsert', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true, 'default_value' => 'now'),
+		array('name' => 'dateupdate', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true, 'default_value'=> 'now'),
 	);
 
 	/**

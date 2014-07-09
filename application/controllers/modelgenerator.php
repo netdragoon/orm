@@ -211,8 +211,10 @@ class Modelgenerator extends CI_Controller {
 							break;
                         case 'timestamp':
                             $type_date = 'Y-m-d H:i:s';
+                            $type[0] = 'date';
 						case 'date':
                            $type_date = 'Y-m-d';
+                            $type[0] = 'date';
 						case 'datetime':
                             $type_date = 'Y-m-d H:i:s';
                             $type[0] = 'date';
