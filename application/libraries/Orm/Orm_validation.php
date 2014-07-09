@@ -24,6 +24,7 @@ class Orm_validation {
     const OPTION_MAX = 'max';
     const OPTION_LIST = 'list';
     const OPTION_MATCHER = 'matcher';
+    const OPTION_CALLBACK = 'callback';
 
     public $field;
     public $type;
@@ -31,6 +32,7 @@ class Orm_validation {
     public $max;
     public $list;
     public $matcher;
+    public $callback;
 
     public function __construct(array $config) {
         foreach ($config as $config_key => $config_value) {
@@ -99,18 +101,14 @@ class Orm_validation {
             return $value;
         }
     }
-
-    /*
-      private function _callback($value) {
-      return all_user_func($value, $config);
-      }
-     */
-
+    
+    private function _callback($value) {
+        return call_user_func_array(array($this->callback), array($value));
+    }
+    
     public function validate(Orm_field $field) {
-
-        if (call_user_func_array(array($this, "_$this->type"), array($field->value)) === FALSE) {
+        if (call_user_func_array(array($this, "_$this->type"), array($field->value)) === FALSE)
             return FALSE;
-        }
 
         return TRUE;
     }
