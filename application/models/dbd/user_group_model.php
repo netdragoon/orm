@@ -19,8 +19,8 @@ class user_group_model extends \Orm_model {
 		array('name' => 'id', 'type' => 'int'),
 		array('name' => 'user_id', 'type' => 'int'),
 		array('name' => 'name', 'type' => 'string'),
-		array('name' => 'dateinsert', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true),
-		array('name' => 'dateupdate', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true),
+		array('name' => 'dateinsert', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true, 'default_value' => 'now'),
+		array('name' => 'dateupdate', 'type' => 'date', 'date_format' => 'Y-m-d H:i:s', 'allow_null' => true, 'default_value' => 'now'),
 	);
 
 	/**
