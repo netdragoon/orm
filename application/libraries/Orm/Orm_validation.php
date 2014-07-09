@@ -40,52 +40,52 @@ class Orm_validation {
         }
     }
 
-    private function _email($value) {
+    private function _check_email($value) {
         return filter_var($value, FILTER_VALIDATE_EMAIL);
     }
 
-    private function _url($value) {
+    private function _check_url($value) {
         return filter_var($value, FILTER_VALIDATE_URL);
     }
 
-    private function _ip($value) {
+    private function _check_ip($value) {
         return filter_var($value, FILTER_VALIDATE_IP);
     }
 
-    private function _int($value) {
+    private function _check_int($value) {
         return filter_var($value, FILTER_VALIDATE_INT);
     }
 
-    private function _float($value) {
+    private function _check_float($value) {
         return filter_var($value, FILTER_VALIDATE_FLOAT);
     }
 
-    private function _exclusion($value) {
+    private function _check_exclusion($value) {
         if ( ! is_array($this->list))
             return FALSE;
 
         return  ! in_array($value, $this->list);
     }
 
-    private function _inclusion($value) {
+    private function _check_inclusion($value) {
         if ( ! is_array($this->list))
             return FALSE;
 
         return in_array($value, $this->list);
     }
 
-    private function _format($value) {
+    private function _check_format($value) {
         if (empty($this->matcher))
             return FALSE;
 
         return preg_match($this->matcher, $value);
     }
     
-    private function _date($value) {        
+    private function _check_date($value) {        
         return checkdate(date('m', strtotime($value)), date('d', strtotime($value)), date('Y', strtotime($value)));
     }
 
-    private function _length($value) {
+    private function _check_length($value) {
         if (empty($value))
             return FALSE;
 
@@ -98,7 +98,7 @@ class Orm_validation {
         }
     }
 
-    private function _presence($value) {
+    private function _check_presence($value) {
         if (empty($value)) {
             return FALSE;
         } else {
@@ -106,12 +106,12 @@ class Orm_validation {
         }
     }
     
-    private function _callback($value) {
+    private function _check_callback($value) {
         return call_user_func_array(array($this->callback), array($value));
     }
     
     public function validate(Orm_field $field) {
-        if (call_user_func_array(array($this, "_$this->type"), array($field->value)) === FALSE)
+        if (call_user_func_array(array($this, "_check_$this->type"), array($field->value)) === FALSE)
             return FALSE;
 
         return TRUE;

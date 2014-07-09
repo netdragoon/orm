@@ -44,8 +44,12 @@ class user_model extends \Orm_model {
         array('field' => 'dateupdate', 'type' => 'date'),
 	);
     
+    //--START_PERSISTANT_CODE
+    
     public static function check_password($value) {
         return ! empty($value);
     }
+    
+    //--END_PERSISTANT_CODE
 }
 
