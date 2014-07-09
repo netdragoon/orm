@@ -1,11 +1,11 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php if (  !  defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
  * SAG ORM (objet relationnel mapping)
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 2.9 (20140611)
+ * @version 3.1 (20140710)
  */
 class Orm_validation {
 
@@ -61,14 +61,14 @@ class Orm_validation {
     }
 
     private function _exclusion($value) {
-        if (!is_array($this->list))
+        if ( ! is_array($this->list))
             return FALSE;
 
-        return !in_array($value, $this->list);
+        return  ! in_array($value, $this->list);
     }
 
     private function _inclusion($value) {
-        if (!is_array($this->list))
+        if ( ! is_array($this->list))
             return FALSE;
 
         return in_array($value, $this->list);

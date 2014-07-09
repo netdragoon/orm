@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 2.9 (20140611)
+ * @version 3.1 (20140710)
  */
 
 $config['orm'] = array(
