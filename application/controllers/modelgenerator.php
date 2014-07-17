@@ -158,24 +158,28 @@ class Modelgenerator extends CI_Controller {
 			$this->_append("class {$table['Name']}_model extends \Orm_model {\r\n");
 			$this->_append("\r\n");
 
-			//on va gerer pour les table d'enum, les constantes sur les modeles codigniter
-			if (strpos($table['Name'], "enum") === 0 && $table['Name'] != "enumregime") {
-				$query_enum = $this->{'db_'.$namespace}->query('SELECT * FROM '.$table['Name']);
-				if ($query_enum->num_rows() > 0) {
-					foreach ($query_enum->result_array() as $val) {
-                        $i = 0;
-                        foreach ($val as $k => $v) {
-                            if ($i === 0) {
-                                $i++;
-                                continue;
+			// GESTION DES CONSTANTES
+            // on regarde si dans la table il y a la colonne constant
+            
+            $query_enum = $this->{'db_'.$namespace}->query('SELECT * FROM '.$table['Name']);
+            $memConstant = array();
+
+            if ($query_enum->num_rows() > 0) {
+                foreach ($query_enum->result_array() as $val) {
+                    foreach ($val as $k => $v) {
+                        if ($k === 'constant' && ! empty($v)) {
+                            if( !isset($memConstant[$v])) {
+                                $memConstant[$v] = "yes"; 
+                            } else {
+                                die('<b style="color:red">ATTENTION : vous avez deux fois la même constante '.$v.' dans la table '.$table['Name'].'</b><br />');
                             }
-                            
-                            $this->_append("\tconst {$this->_strtoconstante($k)}_{$this->_strtoconstante($v)} = {$val['id']};\r\n");
+                            $this->_append("\tconst {$this->_strtoconstante($v)} = {$val['id']};\r\n");
                         }
-					}
-				}
-				$this->_append("\r\n");
-			}
+                    }
+                }
+            }
+            
+            $this->_append("\r\n");
 
             $this->_append("\tpublic static \$table = '{$table['Name']}';\r\n");
 			$this->_append("\r\n");
@@ -410,7 +414,6 @@ class Modelgenerator extends CI_Controller {
         
         return strtoupper($chaine);
     }
-
 }
 
 /* End of file modelgenerator.php */
