@@ -161,18 +161,20 @@ class Modelgenerator extends CI_Controller {
 			// GESTION DES CONSTANTES
             // on regarde si dans la table il y a la colonne constant
             
-            $query_enum = $this->{'db_'.$namespace}->query('SELECT * FROM '.$table['Name']);
-            $memConstant = array();
+            $constants = array();
+            $query_enum = $this->{'db_'.$namespace}->query("SELECT * FROM `{$table['Name']}`");
 
             if ($query_enum->num_rows() > 0) {
                 foreach ($query_enum->result_array() as $val) {
                     foreach ($val as $k => $v) {
                         if ($k === 'constant' && ! empty($v)) {
-                            if( !isset($memConstant[$v])) {
-                                $memConstant[$v] = "yes"; 
+                            
+                            if( !isset($constants[$v])) {
+                                $constants[$v] = "yes"; 
                             } else {
                                 die('<b style="color:red">ATTENTION : vous avez deux fois la même constante '.$v.' dans la table '.$table['Name'].'</b><br />');
                             }
+                            
                             $this->_append("\tconst {$this->_strtoconstante($v)} = {$val['id']};\r\n");
                         }
                     }
