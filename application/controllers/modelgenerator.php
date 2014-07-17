@@ -17,6 +17,8 @@ class Modelgenerator extends CI_Controller {
 
 	public function __construct() {
 		parent::__construct();
+        
+        $this->load->helper("text");
 	}
     
     public function index() {
@@ -158,26 +160,24 @@ class Modelgenerator extends CI_Controller {
 
 			//on va gerer pour les table d'enum, les constantes sur les modeles codigniter
 			if (strpos($table['Name'], "enum") === 0 && $table['Name'] != "enumregime") {
-				$this->_append("\r\n");
-				$enums = array();
 				$query_enum = $this->{'db_'.$namespace}->query('SELECT * FROM '.$table['Name']);
 				if ($query_enum->num_rows() > 0) {
 					foreach ($query_enum->result_array() as $val) {
-						$id = $val['id'];
-						$firstpass = true;
-						foreach ($val as $k => $v) {
-							if ($firstpass) {
-								$firstpass = false;
-							} else {
-								$this->_append("\t const ".strtoupper($k)."_".str_replace('+', '_', str_replace('-', '_', str_replace(' ', '_', strtoupper($v))))." = ".$id."; "."\r\n");
-							}
-						}
+                        $i = 0;
+                        foreach ($val as $k => $v) {
+                            if ($i === 0) {
+                                $i++;
+                                continue;
+                            }
+                            
+                            $this->_append("\tconst {$this->_strtoconstante($k)}_{$this->_strtoconstante($v)} = {$val['id']};\r\n");
+                        }
 					}
 				}
 				$this->_append("\r\n");
 			}
 
-			$this->_append("\t".'public static $table = \''.$table['Name'].'\';'."\r\n");
+            $this->_append("\tpublic static \$table = '{$table['Name']}';\r\n");
 			$this->_append("\r\n");
 
 			$query_field = $this->{'db_'.$namespace}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
@@ -186,7 +186,7 @@ class Modelgenerator extends CI_Controller {
 
 				$primary_keys = "";
 
-				$foreign_keys = "\t".'public static $foreign_key = array('."\r\n";
+				$foreign_keys = "\tpublic static \$foreign_key = array(\r\n";
 				$flag_foreign_keys = false;
 
 				$fields_javadoc_buffer = "\t/**\r\n";
@@ -305,7 +305,7 @@ class Modelgenerator extends CI_Controller {
 				$asso = true;
 
 				$relations_javadoc_buffer = "\t/**\r\n";
-				$relations_buffer = "\t public static \$associations = array(\r\n";
+				$relations_buffer = "\tpublic static \$associations = array(\r\n";
 				// écriture relation inverses
 				if (isset($this->association[$table['Name']])) {
 					foreach ($this->association[$table['Name']]['php'] as $rel) {
@@ -398,6 +398,18 @@ class Modelgenerator extends CI_Controller {
 	private function _append($output) {
 		$this->model_output .= $output;
 	}
+    
+    private function _strtoconstante($chaine) { 
+        $chaine = trim($chaine); 
+        $chaine = convert_accented_characters($chaine);
+        $chaine = preg_replace('#([^.a-z0-9]+)#i', '_', $chaine); 
+        $chaine = preg_replace('#-#','_',$chaine);
+        $chaine = preg_replace('#_{2,}#','_',$chaine);
+        $chaine = preg_replace('#_$#','',$chaine);
+        $chaine = preg_replace('#^_#','',$chaine);
+        
+        return strtoupper($chaine);
+    }
 
 }
 
