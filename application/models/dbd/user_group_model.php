@@ -24,7 +24,7 @@ class user_group_model extends \Orm_model {
 	);
 
 	/**
-	 * @method dbd\user_model user() belongs_to
+	 * @method user_model user() belongs_to
 	 */
     public static $associations = array(
 		array('association_key' => 'user', 'model' => 'user_model', 'type' => 'belongs_to', 'primary_key' => 'id', 'foreign_key' => 'user_id')
