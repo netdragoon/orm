@@ -55,21 +55,19 @@ class Modelgenerator extends CI_Controller {
 		
 		foreach (glob($dir) as $file_path) {
 			if (is_file($file_path)) {
-				$file = basename($file_path, '.php');
+				$file = basename($file_path);
 				$path = dirname($file_path);
 				$file_content = file_get_contents($file_path);
-
+                $override = '';
 				$particules = explode(self::STARTCODE2KEEP, $file_content);
-
-				if ( ! empty($particules[1])) {
+                
+				if ( ! empty($particules[1])) {                    
 					$particules = explode(self::ENDCODE2KEEP, $particules[1]);
 					$override = $particules[0];
-				} else {
-					$override = '';
 				}
-
+                
 				if ( ! empty($override)) {
-					$this->override[$file] = "\r\n\t".self::STARTCODE2KEEP.($override)."".self::ENDCODE2KEEP."\r\n";
+					$this->override[$file] = "\r\n\t".self::STARTCODE2KEEP."\r\n".($override)."\r\n".self::ENDCODE2KEEP."\r\n";
 				}
 
 				echo "Suppression du fichier <b>$file</b> du répertoire $path";
@@ -90,7 +88,7 @@ class Modelgenerator extends CI_Controller {
 			"has_one" => "has_one"
 		);
 		
-		$query_table = $this->{'db_'.$namespace}->query("SHOW TABLE STATUS");
+		$query_table = $this->{"db_$namespace"}->query("SHOW TABLE STATUS");
 		
 		foreach ($query_table->result_array() as $table) {
 			// création des relations (clés étrangères d'inno db préalablement définies en base)
@@ -99,7 +97,7 @@ class Modelgenerator extends CI_Controller {
 									WHERE CONSTRAINT_NAME != "PRIMARY"
 										AND  TABLE_NAME = "'.$table['Name'].'"';
 
-			$query_relations = $this->{'db_'.$namespace}->query($sql);
+			$query_relations = $this->{"db_$namespace"}->query($sql);
 
 			if ($query_relations->num_rows() > 0) {
 				foreach ($query_relations->result_array() as $data) {
@@ -108,7 +106,7 @@ class Modelgenerator extends CI_Controller {
 					 // le plus courant
 					$relation_type = "has_one";
 					
-					$query_field = $this->{'db_'.$namespace}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
+					$query_field = $this->{"db_$namespace"}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
 					$relations_comments = array();
 					
 					if ($query_field->num_rows() > 0) {
@@ -145,7 +143,7 @@ class Modelgenerator extends CI_Controller {
 		
 		echo '<h1>GENERATION</h1>';
 
-		$query_table = $this->{'db_'.$namespace}->query("SHOW TABLE STATUS");
+		$query_table = $this->{"db_$namespace"}->query("SHOW TABLE STATUS");
 		
 		foreach ($query_table->result_array() as $table) {
 			$this->model_output = '';
@@ -156,37 +154,36 @@ class Modelgenerator extends CI_Controller {
 			$this->_append("if ( ! defined('BASEPATH')) exit('No direct script access allowed');\r\n");
 			$this->_append("\r\n");
 			$this->_append("class {$table['Name']}_model extends \Orm_model {\r\n");
-			$this->_append("\r\n");
 
 			// GESTION DES CONSTANTES
             // on regarde si dans la table il y a la colonne constant
-            
             $constants = array();
-            $query_enum = $this->{'db_'.$namespace}->query("SELECT * FROM `{$table['Name']}`");
+            $query_enum = $this->{"db_$namespace"}->query("SELECT * FROM `{$table['Name']}`");
 
             if ($query_enum->num_rows() > 0) {
                 foreach ($query_enum->result_array() as $val) {
                     foreach ($val as $k => $v) {
                         if ($k === 'constant' && ! empty($v)) {
                             
-                            if( !isset($constants[$v])) {
-                                $constants[$v] = "yes"; 
+                            $constant = $this->_strtoconstante($v);
+                            
+                            if ( ! in_array($constant, $constants)) {
+                                $constants[] = $constant;
                             } else {
-                                die('<b style="color:red">ATTENTION : vous avez deux fois la même constante '.$v.' dans la table '.$table['Name'].'</b><br />');
+                                die('<b style="color:red">ATTENTION : Vous avez deux fois la même constante '.$constant.' dans la table '.$table['Name'].'</b><br />');
                             }
                             
-                            $this->_append("\tconst {$this->_strtoconstante($v)} = {$val['id']};\r\n");
+                            $this->_append("\tconst $constant = {$val['id']};\r\n");
                         }
                     }
                 }
             }
             
             $this->_append("\r\n");
-
             $this->_append("\tpublic static \$table = '{$table['Name']}';\r\n");
 			$this->_append("\r\n");
 
-			$query_field = $this->{'db_'.$namespace}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
+			$query_field = $this->{"db_$namespace"}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
 
 			if ($query_field->num_rows() > 0) {
 
@@ -304,7 +301,7 @@ class Modelgenerator extends CI_Controller {
                                     FROM information_schema.KEY_COLUMN_USAGE
                                     WHERE CONSTRAINT_NAME != "PRIMARY"
                                         AND  TABLE_NAME = "'.$table['Name'].'"';
-			$query_relations = $this->{'db_'.$namespace}->query($sql_foreign_keys);
+			$query_relations = $this->{"db_$namespace"}->query($sql_foreign_keys);
 			$asso = false;
 						
 			if ($query_relations->num_rows() > 0 || (isset($this->association[$table['Name']]) && count($this->association[$table['Name']])) > 0) {
@@ -356,10 +353,10 @@ class Modelgenerator extends CI_Controller {
 			}
 			
 			$filename = $table['Name'].'_model.php';
-			
+            			
 			// Si il exite un override
-			if ( ! empty($this->override[$filename])) {
-				$this->_append($this->override[$filename]."\r\n");
+			if ( ! empty($this->override[$filename])) {           
+				$this->_append($this->override[$filename]);
 			}
 			
 			$this->_append('}'."\r\n");
@@ -391,7 +388,7 @@ class Modelgenerator extends CI_Controller {
 			$this->_save_override(APPPATH.'models/'.$namespace.'/*');
 
 			// Stock la nouvelle connexion à la base de donnée
-			$this->{'db_'.$namespace} = $this->load->database($namespace, TRUE);
+			$this->{"db_$namespace"} = $this->load->database($namespace, TRUE);
 			
 			// Stock les association many
 			$this->_association_many($namespace);
