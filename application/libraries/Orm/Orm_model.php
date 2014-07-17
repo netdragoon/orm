@@ -122,7 +122,7 @@ class Orm_model extends Orm {
      * Génère l'insert et l'update d'une requete SQL
      * @param array $data
      */
-    private function _update(array $data) {
+    private function _update(array $data, $is_update = FALSE) {
         $input = array();
         $vector_value = NULL;
 
@@ -133,7 +133,7 @@ class Orm_model extends Orm {
         foreach ($data as $name => $value) {
 
             // Si le champs n'est pas dans la liste on ne le met pas à jour
-            if ( ! in_array($name, $this->_update))
+            if ($is_update && ! in_array($name, $this->_update))
                 continue;
 
             // Si la configuration n'existe pas
@@ -472,12 +472,14 @@ class Orm_model extends Orm {
 
         // Définition de la table
         parent::$CI->{$this->_db()}->from($orm_table->name);
+        
+        $is_insert = ( ! empty($orm_primary_key->value) && $force_insert === FALSE) ? TRUE : FALSE;
 
         // Prépare les champs a mette a jour
-        $this->_update($this->_data);
+        $this->_update($this->_data,  ! $is_insert);
 
         // Si c'est une insertion
-        if ( ! empty($orm_primary_key->value) && $force_insert === FALSE) {
+        if ($is_insert) {
             // Exécute la requête
             return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->update();
 
