@@ -129,7 +129,7 @@ class Modelgenerator extends CI_Controller {
 						// STOCKAGE DES RELATION INVERSES						
 						$referenced_table_name_t = strtolower($table['Name']);
 						$this->association[$referenced_table_name]['php'][] = "\t\tarray('association_key' => '$referenced_table_name_t', 'model' => '{$table['Name']}_model', 'type' => '{$relation_inverse[$relation_type]}', 'primary_key' => 'id', 'foreign_key' => '{$data["COLUMN_NAME"]}'),\r\n";
-						$this->association[$referenced_table_name]['javadoc'][] = "\t * @method $namespace\\{$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
+						$this->association[$referenced_table_name]['javadoc'][] = "\t * @method {$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
 					}
 				}
 			}
@@ -335,7 +335,7 @@ class Modelgenerator extends CI_Controller {
 					}
 
 					if ($relation_type != "") {
-						$relations_javadoc_buffer .= "\t * @method $namespace\\{$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
+						$relations_javadoc_buffer .= "\t * @method {$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
                         $relations_buffer .= "\t\tarray('association_key' => '$referenced_table_name', 'model' => '{$referenced_table_name}_model', 'type' => '$relation_type', 'primary_key' => '$referenced_column_name', 'foreign_key' => '$column_name'),\r\n";
 					}
 				}
