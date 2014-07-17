@@ -67,7 +67,7 @@ class Modelgenerator extends CI_Controller {
 				}
                 
 				if ( ! empty($override)) {
-					$this->override[$file] = "\r\n\t".self::STARTCODE2KEEP."\r\n".($override)."\r\n".self::ENDCODE2KEEP."\r\n";
+					$this->override[$file] = "\r\n\t".self::STARTCODE2KEEP.($override).self::ENDCODE2KEEP."\r\n";
 				}
 
 				echo "Suppression du fichier <b>$file</b> du répertoire $path";
