@@ -38,7 +38,7 @@ class user_model extends \Orm_model {
     public static $validations = array(
         array('field' => 'id', 'type' => 'int'),
         array('field' => 'login', 'type' => 'presence'),
-        array('field' => 'password', 'type' => 'callback', 'callback' => 'dbd\user_model::check_password'),
+        array('field' => 'password', 'type' => 'callback', 'callback' => '\dbd\user_model::check_password'),
         array('field' => 'lastname', 'type' => 'presence'),
         array('field' => 'dateinsert', 'type' => 'date'),
         array('field' => 'dateupdate', 'type' => 'date'),
