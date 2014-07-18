@@ -75,6 +75,11 @@ class Orm_model extends Orm {
         if ( ! isset(parent::$CI->{$this->_db()})) {
             // Nouvelle connexion
             parent::$CI->{$this->_db()} = parent::$CI->load->database($this->_namespace, TRUE);
+            
+            // Si le cryptage est actif charge les éléments indispensable au cryptage
+            if (parent::$config['encryption_enable']) {
+                parent::$CI->{$this->_db()}->query("SET @@session.block_encryption_mode = 'aes-256-cbc';");
+            }
         }
     }
 
@@ -122,27 +127,22 @@ class Orm_model extends Orm {
      * Génère l'insert et l'update d'une requete SQL
      * @param array $data
      */
-    private function _update(array $data) {
+    private function _set(array $data, $insert = TRUE) {
         $input = array();
         $vector_value = NULL;
-
+        
         if (parent::$config['encryption_enable'])
             $vector_value = ( ! empty($data['vector'])) ? $data['vector'] : random_string('unique');
 
         // on boucle sur tous les champs de la table
         foreach ($data as $name => $value) {
-
-            // Si le champs n'est pas dans la liste on ne le met pas à jour
-            if ( ! in_array($name, $this->_update))
-                continue;
-
             // Si la configuration n'existe pas
             if (($config = $this->_get_config_field($name)) === FALSE)
-                return;
+                continue;
 
             // Initialise l'objet champ
             $orm_field = new Orm_field($config, $value);
-
+            
             // Si c'est un champ qu'on doit crypter
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $input = array(
@@ -151,15 +151,20 @@ class Orm_model extends Orm {
                     'quote' => FALSE
                 );
 
-                // Si c'est un champ vecteur
+            // Si c'est un champ vecteur
             } else if (parent::$config['encryption_enable'] && $orm_field->name == 'vector') {
+                
+                // Si le champ vecteur n'est pas dans l'insert on l'ajoute
+                if ($insert && ! in_array($orm_field->name, $this->_update))
+                    $this->_update[] = $orm_field->name;
+                
                 $input = array(
                     'field' => $orm_field->name,
                     'value' => $vector_value,
                     'quote' => TRUE
                 );
 
-                // Si c'est un champ binaire
+            // Si c'est un champ binaire
             } else if (parent::$config['binary_enable'] && $orm_field->binary) {
                 $input = array(
                     'field' => $orm_field->name,
@@ -167,7 +172,7 @@ class Orm_model extends Orm {
                     'quote' => FALSE
                 );
 
-                // Par défaut
+            // Par défaut
             } else {
                 $input = array(
                     'field' => $orm_field->name,
@@ -175,12 +180,19 @@ class Orm_model extends Orm {
                     'quote' => TRUE
                 );
             }
-
-            parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
+            
+            if (in_array($name, $this->_update)) {
+                parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
+            }
         }
+        
+        $status = ! empty($this->_update);
 
         // Réinitialise les champs a mettre à jour
         $this->_update = array();
+        
+        // Indique qu'il y a des champs a mettre a jour
+        return $status;
     }
 
     /**
@@ -238,6 +250,17 @@ class Orm_model extends Orm {
         // Retoune le nouveau modèle associé
         return $orm_association->associated();
     }
+    
+    /**
+     * Retoune les valueurs du modèle
+     * @return mixe
+     */
+    public function get($key = NULL) {
+        if ( ! empty($key))
+            return isset($this->_data[$key]) ? $this->_data[$key] : FALSE;
+        
+        return $this->_data;
+    }
 
     /**
      * Cast la valeur d'un champ
@@ -284,7 +307,7 @@ class Orm_model extends Orm {
     public function get_namespace() {
         return $this->_namespace;
     }
-
+    
     /**
      * Génère un WHERE en SQL
      * @param mixe $key
@@ -469,25 +492,32 @@ class Orm_model extends Orm {
         // Suppression du cache
         if (parent::$config['cache'])
             parent::$CI->cache->delete('orm_'.$orm_table->name);
+        
+        // Type de requête
+        $has_insert = (empty($orm_primary_key->value) || $force_insert === TRUE) ? TRUE : FALSE;
 
-        // Définition de la table
-        parent::$CI->{$this->_db()}->from($orm_table->name);
-
-        // Prépare les champs a mette a jour
-        $this->_update($this->_data);
-
-        // Si c'est une insertion
-        if ( ! empty($orm_primary_key->value) && $force_insert === FALSE) {
-            // Exécute la requête
-            return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->update();
-
-            // Si c'est un update
-        } else {
-            // Exécute la requête
+        // Mise a jour des champs, et retourne si il y a des champs a modifier
+        $has_values = $this->_set($this->_data, $has_insert);
+        
+        // Si la requete est de type insert
+        if ($has_insert) {
+           // Exécute la requête
+            parent::$CI->{$this->_db()}->from($orm_table->name);
             parent::$CI->{$this->_db()}->insert();
 
             // Retourne l'id
             return $this->{$orm_primary_key->name} = parent::$CI->{$this->_db()}->insert_id();
+            
+         // Si la requete est de type update
+        } else {
+            // Il y a aucun champ a mettre a jour
+            if ($has_values === FALSE)
+                return FALSE;
+            
+            // Exécute la requête
+            parent::$CI->{$this->_db()}->from($orm_table->name);
+            parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value);
+            return parent::$CI->{$this->_db()}->update();
         }
     }
 
@@ -593,7 +623,7 @@ class Orm_model extends Orm {
                 parent::$CI->{$this->_db()}->where($association->primary_key, $association->value)->limit(1);
                 break;
             case Orm_association::TYPE_HAS_MANY:
-                parent::$CI->{$this->_db()}->where($association->primary_key, $association->value);
+                parent::$CI->{$this->_db()}->where($association->foreign_key, $association->value);
                 break;
             case Orm_association::TYPE_BELONGS_TO:
                 parent::$CI->{$this->_db()}->where($association->primary_key, $association->value)->limit(1);

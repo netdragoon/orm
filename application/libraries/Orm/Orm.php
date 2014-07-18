@@ -53,7 +53,6 @@ class Orm {
             // Si le cryptage est actif charge les éléments indispensable au cryptage
             if (self::$config['encryption_enable']) {
                 self::$CI->load->helper('string');
-                self::$CI->db->query("SET @@session.block_encryption_mode = 'aes-256-cbc';");
             }
         }
     }

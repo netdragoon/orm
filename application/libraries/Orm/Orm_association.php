@@ -25,19 +25,19 @@ class Orm_association {
             $this->{$config_key} = $config_value;
         }
 
-        $this->value = (int) $model->id;
-
-        if (empty($type->model)) {
-            $this->model = $model->get_namespace() . '\\' . $this->association_key . '_model';
+        if (empty($this->model)) {
+            $this->model = '\\'.$model->get_namespace().'\\'.$this->association_key.'_model';
         } else {
-            $this->model = $model->get_namespace() . '\\' . $this->model;
+            $this->model = '\\'.$model->get_namespace().'\\'.$this->model;
         }
-
-        if (empty($type->primary_key))
+        
+        if (empty($this->primary_key))
             $this->primary_key = 'id';
 
-        if (empty($type->foreign_key))
-            $this->foreign_key = $this->association_key . '_id';
+        if (empty($this->foreign_key))
+            $this->foreign_key = $this->association_key.'_id';
+        
+        $this->value = (int) (self::TYPE_HAS_MANY !== $this->type) ? $model->{$this->foreign_key} : $model->{$this->primary_key};
     }
 
     public function associated() {
