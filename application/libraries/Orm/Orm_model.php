@@ -128,9 +128,13 @@ class Orm_model extends Orm {
      * @param array $data
      */
     private function _set(array $data, $insert = TRUE) {
+        // Initialise le champ
         $input = array();
+        
+        // Initilise la valeur du vecteur
         $vector_value = NULL;
         
+        // Si le cryptage est activé, on renseigne le vecteur
         if (parent::$config['encryption_enable'])
             $vector_value = ( ! empty($data['vector'])) ? $data['vector'] : random_string('unique');
 
@@ -181,18 +185,19 @@ class Orm_model extends Orm {
                 );
             }
             
-            if (in_array($name, $this->_update)) {
+            // Si le champ doit être mis a jour
+            if (in_array($name, $this->_update))
                 parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
-            }
         }
         
-        $status = ! empty($this->_update);
+        // Si il y a des champs a modifier
+        $has_values = ! empty($this->_update);
 
         // Réinitialise les champs a mettre à jour
         $this->_update = array();
         
         // Indique qu'il y a des champs a mettre a jour
-        return $status;
+        return $has_values;
     }
 
     /**
