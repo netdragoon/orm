@@ -194,12 +194,18 @@ class Modelgenerator extends CI_Controller {
 
 				$fields_javadoc_buffer = "\t/**\r\n";
 				$fields_buffer = "\tpublic static \$fields = array(\r\n";
+                
+                $type = array();
 
 				foreach ($query_field->result_array() as $field) {
-					$type = explode('(', $field['Type']);
+                    if( strpos( $field['Type'], "(") !== FALSE ) {
+                        $type = explode('(', $field['Type']);       
+                    } else {
+                        $type[0] = $field['Type'];                                         
+                    }
                     
                     $type_date = NULL;
-
+                    
 					switch ($type[0]) {
 						case 'bigint':
 						case 'mediumint':
@@ -212,13 +218,12 @@ class Modelgenerator extends CI_Controller {
 						case 'double':
 							$type[0] = 'float';
 							break;
-                        case 'timestamp':
-                            $type_date = 'Y-m-d H:i:s';
-                            $type[0] = 'date';
 						case 'date':
-                           $type_date = 'Y-m-d';
+                            $type_date = 'Y-m-d';
                             $type[0] = 'date';
+                            break;
 						case 'datetime':
+                        case 'timestamp':
                             $type_date = 'Y-m-d H:i:s';
                             $type[0] = 'date';
                             break;
