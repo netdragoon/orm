@@ -16,6 +16,9 @@ class Modelgenerator extends CI_Controller {
 	const ENDCODE2KEEP = "//--END_PERSISTANT_CODE";
 
 	public function __construct() {
+        ini_set("memory_limit","-1");
+        set_time_limit(0);
+        
 		parent::__construct();
         
         $this->load->helper("text");
@@ -23,7 +26,7 @@ class Modelgenerator extends CI_Controller {
     
     public function index() {
         $this->run();
-    } 
+    }
 
     private function _config() {
 		// Fichier de configuration des bases de données
@@ -158,24 +161,30 @@ class Modelgenerator extends CI_Controller {
 			// GESTION DES CONSTANTES
             // on regarde si dans la table il y a la colonne constant
             $constants = array();
-            $query_enum = $this->{"db_$namespace"}->query("SELECT * FROM `{$table['Name']}`");
+            
+            $query_columns = $this->{"db_$namespace"}->query("SHOW COLUMNS FROM `{$table['Name']}`");
+            
+            foreach ($query_columns->result_array() as $column) {
+                if ($column['Field'] === "constant") {
+                    
+                    $query_constant = $this->{"db_$namespace"}->query("SELECT `constant` FROM `{$table['Name']}`");
+                    
+                    foreach ($query_constant->result_array() as $val) {
+                        foreach ($val as $k => $v) {
+                            if ($k === 'constant' && ! empty($v)) {
 
-            if ($query_enum->num_rows() > 0) {
-                foreach ($query_enum->result_array() as $val) {
-                    foreach ($val as $k => $v) {
-                        if ($k === 'constant' && ! empty($v)) {
-                            
-                            $constant = $this->_strtoconstante($v);
-                            
-                            if ( ! in_array($constant, $constants)) {
-                                $constants[] = $constant;
-                            } else {
-                                die('<b style="color:red">ATTENTION : Vous avez deux fois la même constante '.$constant.' dans la table '.$table['Name'].'</b><br />');
+                                $constant = $this->_strtoconstante($v);
+
+                                if ( ! in_array($constant, $constants)) {
+                                    $constants[] = $constant;
+                                } else {
+                                    die('<b style="color:red">ATTENTION : Vous avez deux fois la même constante '.$constant.' dans la table '.$table['Name'].'</b><br />');
+                                }
+
+                                $this->_append("\tconst $constant = {$val['id']};\r\n");
                             }
-                            
-                            $this->_append("\tconst $constant = {$val['id']};\r\n");
                         }
-                    }
+                    }    
                 }
             }
             
@@ -400,6 +409,9 @@ class Modelgenerator extends CI_Controller {
 			
 			// Création des modèles
 			$this->_create_model($namespace);
+            
+            // Profiler
+            $this->output->enable_profiler(TRUE);
 		}
 	}
 
