@@ -167,9 +167,10 @@ class Modelgenerator extends CI_Controller {
             foreach ($query_columns->result_array() as $column) {
                 if ($column['Field'] === "constant") {
                     
-                    $query_constant = $this->{"db_$namespace"}->query("SELECT `constant` FROM `{$table['Name']}`");
-                    
+                    $query_constant = $this->{"db_$namespace"}->query("SELECT `id`, `constant` FROM `{$table['Name']}` WHERE `constant` IS NOT NULL;");
+                  
                     foreach ($query_constant->result_array() as $val) {
+                       
                         foreach ($val as $k => $v) {
                             if ($k === 'constant' && ! empty($v)) {
 
