@@ -34,6 +34,8 @@ class user_model extends \Orm_model {
     public static $associations = array(
         array('association_key' => 'user_group', 'model' => 'user_group_model', 'type' => 'has_many', 'primary_key' => 'id', 'foreign_key' => 'user_id')
 	);
+        
+    //--START_PERSISTANT_CODE
     
     public static $validations = array(
         array('field' => 'id', 'type' => 'int'),
@@ -43,8 +45,6 @@ class user_model extends \Orm_model {
         array('field' => 'dateinsert', 'type' => 'date'),
         array('field' => 'dateupdate', 'type' => 'date'),
 	);
-    
-    //--START_PERSISTANT_CODE
     
     public static function check_password($value) {
         return ! empty($value);

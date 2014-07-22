@@ -29,6 +29,8 @@ class user_group_model extends \Orm_model {
     public static $associations = array(
 		array('association_key' => 'user', 'model' => 'user_model', 'type' => 'belongs_to', 'primary_key' => 'id', 'foreign_key' => 'user_id')
 	);
+    
+    //--START_PERSISTANT_CODE
      
     public static $validations = array(
         array('field' => 'id', 'type' => 'int'),
@@ -37,5 +39,7 @@ class user_group_model extends \Orm_model {
         array('field' => 'dateinsert', 'type' => 'date'),
         array('field' => 'dateupdate', 'type' => 'date'),
 	);
+    
+    //--END_PERSISTANT_CODE
 }
 
