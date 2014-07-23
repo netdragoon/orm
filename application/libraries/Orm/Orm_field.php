@@ -19,7 +19,7 @@ class Orm_field {
     const ALLOWNULL = 'allow_null';
     const ENCRYPT = 'encrypt';
     const BINARY = 'binary';
-    const DEFAULTVALUE_NOW = 'now';
+    const NOW = 'now';
 
     public $name;
     public $type;
@@ -63,7 +63,7 @@ class Orm_field {
     public function convert() {
         if ( ! empty($this->default_value) && empty($this->value)) {
             
-            if ($this->type === self::TYPE_DATE && $this->default_value === self::DEFAULTVALUE_NOW) {
+            if ($this->type === self::TYPE_DATE && $this->default_value === self::NOW) {
                 return $this->value = date($this->date_format);
             
             } else {
