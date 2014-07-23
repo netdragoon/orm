@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.0 (20140611)
+ * @version 3.1 (20140723)
  */
 class Orm_model extends Orm {
     
@@ -613,8 +613,10 @@ class Orm_model extends Orm {
     protected function _primary_key_find(Orm_primary_key $primary_key) {
 
         $object = $this->where($primary_key->name, $primary_key->value)->find_one();
-
-        $this->_data = $object->_data;
+        
+        // Si l'object existe
+        if ( ! empty($object))
+            $this->_data = $object->_data;
     }
 
     /**
