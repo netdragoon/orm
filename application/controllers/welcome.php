@@ -51,6 +51,7 @@ class Welcome extends CI_Controller {
         
         // ---------- La validation
         $model_user = new \dbd\user_model(1);
+        $model_user->firstname = 'Yoann';
         $model_user->lastname = 'Vanitou';
         
         // Vérifie si l'object est valide
