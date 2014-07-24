@@ -2,17 +2,47 @@
 
 class Welcome extends CI_Controller {
 
-	public function __construct() {
-		parent::__construct();
-	}
-    
+    public function __construct() {
+        parent::__construct();
+    }
+
     public function index() {
-		$this->load->library('orm');
+        // ---------- Chargement de la library
+        $this->load->library('orm');
+
+        // ---------- Création d'un nouvelle object (INSERT)
+        $model_user = new \dbd\user_model();
+        $model_user->login = 'yoann';
+        $model_user->save();
         
-        $model_user = new dbd\user_model(1);
+        var_dump($model_user);
         
+        // ---------- Modification d'un object (UPDATE)
+        $model_user = new \dbd\user_model(1);
+        $model_user->login = 'vanitou';
+        $model_user->save();
+        
+        // ---------- Charge l'object id 1 (SELECT)
+        $model_user = new \dbd\user_model(1);
+        
+        var_dump($model_user);
+        
+        // Autre façon de faire
+        $model_user = new \dbd\user_model();
+        $model_user = $model_user->where('id', 1)->find_one();
+        
+        // Recherche avancé
+        $model_user = new \dbd\user_model();
+        $model_user = $model_user->where('login', 'vanitou')->order_by('id', 'ASC')->find();
+            
+        var_dump($model_user);
+        
+        // ---------- Suppression de l'object id 1 (DELETE)
+        $model_user = new \dbd\user_model(1);
+        $model_user->remove();
+
         $this->output->enable_profiler(TRUE);
-	}
+    }
 }
 
 /* End of file welcome.php */
