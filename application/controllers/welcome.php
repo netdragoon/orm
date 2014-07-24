@@ -41,6 +41,7 @@ class Welcome extends CI_Controller {
         $model_user = new \dbd\user_model(1);
         $model_user->remove();
 
+        // Affiche les requêtes SQL
         $this->output->enable_profiler(TRUE);
     }
 }
