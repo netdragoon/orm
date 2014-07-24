@@ -40,6 +40,14 @@ class Welcome extends CI_Controller {
         // ---------- Suppression de l'object id 1 (DELETE)
         $model_user = new \dbd\user_model(1);
         $model_user->remove();
+        
+        // ---------- Les relations (JOINT)
+        $model_user = new \dbd\user_model(1);
+        
+        // Retourne un object "\dbd\user_group_model"
+        $model_user_group = $model_user->user_group()->find_one();
+        
+        var_dump($model_user, $model_user_group);
 
         // Affiche les requêtes SQL
         $this->output->enable_profiler(TRUE);
