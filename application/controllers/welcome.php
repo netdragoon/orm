@@ -48,6 +48,23 @@ class Welcome extends CI_Controller {
         $model_user_group = $model_user->user_group()->find_one();
         
         var_dump($model_user, $model_user_group);
+        
+        // ---------- La validation
+        $model_user = new \dbd\user_model(1);
+        $model_user->lastname = 'Vanitou';
+        
+        // Vérifie si l'object est valide
+        if ( ! $model_user->is_validate()) {
+            $errors = $model_user->validate();
+            
+            // Retourne les champs invalide
+            var_dump($errors);
+            
+        } else {
+            // Si l'object est valide on le sauvegarde
+            $model_user->save();
+        }
+        
 
         // Affiche les requêtes SQL
         $this->output->enable_profiler(TRUE);
