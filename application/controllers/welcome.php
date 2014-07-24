@@ -17,7 +17,7 @@ class Welcome extends CI_Controller {
         
         var_dump($model_user);
         
-        // ---------- Modification d'un object (UPDATE)
+        // ---------- Modification de l'object id 1 (UPDATE)
         $model_user = new \dbd\user_model(1);
         $model_user->login = 'vanitou';
         $model_user->save();
