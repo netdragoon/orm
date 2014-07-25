@@ -314,6 +314,20 @@ class Orm_model extends Orm {
     }
     
     /**
+     * Retourne les champs d'un modèle
+     * @return array
+     */
+    public function get_fields() {
+        $fields = array();
+        
+        foreach (static::$fields as $field) {
+            $fields[] = $field['name'];
+        }
+        
+        return $fields;
+    }
+    
+    /**
      * Génère un WHERE en SQL
      * @param mixe $key
      * @param NULL|string|int|float $value
