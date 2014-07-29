@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.1.3 (20140729)
+ * @version 3.2.1 (20140729)
  */
 class Orm {
 
@@ -19,7 +19,7 @@ class Orm {
      * Version de l'ORM
      * @var string 
      */
-    protected $version = '3.1.3 (20140729)';
+    protected $version = '3.2.1 (20140729)''';
 
     /**
      * Configuration de l'ORM
@@ -47,6 +47,9 @@ class Orm {
         if (self::$CI === NULL) {
             // Charge l'instance de CodeIgniter
             self::$CI = & get_instance();
+            
+            // Charge le fichier langue
+            self::$CI->load->language('orm');
 
             // Si la clé de cryptage est vide, on désactive le cryptage
             if (self::$config['encryption_enable'] && empty(self::$config['encryption_key']))

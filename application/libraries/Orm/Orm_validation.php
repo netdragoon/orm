@@ -5,9 +5,9 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.1.3 (20140729)
+ * @version 3.2.1 (20140729)
  */
-class Orm_validation {
+class Orm_validation extends Orm {
 
     const OPTION_TYPE_EMAIL = 'email';
     const OPTION_TYPE_URL = 'url';
@@ -25,6 +25,7 @@ class Orm_validation {
     const OPTION_LIST = 'list';
     const OPTION_MATCHER = 'matcher';
     const OPTION_CALLBACK = 'callback';
+    const OPTION_MESSAGE = 'message';
 
     public $field;
     public $type;
@@ -33,6 +34,7 @@ class Orm_validation {
     public $list;
     public $matcher;
     public $callback;
+    public $message;
 
     public function __construct(array $config) {
         foreach ($config as $config_key => $config_value) {
@@ -40,41 +42,41 @@ class Orm_validation {
         }
     }
 
-    private function _check_email($value) {
+    private function _check_email($value) {        
         return filter_var($value, FILTER_VALIDATE_EMAIL);
     }
 
-    private function _check_url($value) {
+    private function _check_url($value) {        
         return filter_var($value, FILTER_VALIDATE_URL);
     }
 
-    private function _check_ip($value) {
+    private function _check_ip($value) {        
         return filter_var($value, FILTER_VALIDATE_IP);
     }
 
-    private function _check_int($value) {
+    private function _check_int($value) {        
         return filter_var($value, FILTER_VALIDATE_INT);
     }
 
-    private function _check_float($value) {
+    private function _check_float($value) {        
         return filter_var($value, FILTER_VALIDATE_FLOAT);
     }
 
-    private function _check_exclusion($value) {
+    private function _check_exclusion($value) {        
         if ( ! is_array($this->list))
             return FALSE;
 
         return  ! in_array($value, $this->list);
     }
 
-    private function _check_inclusion($value) {
+    private function _check_inclusion($value) {        
         if ( ! is_array($this->list))
             return FALSE;
 
         return in_array($value, $this->list);
     }
 
-    private function _check_format($value) {
+    private function _check_format($value) {        
         if (empty($this->matcher))
             return FALSE;
 
@@ -85,7 +87,7 @@ class Orm_validation {
         return checkdate(date('m', strtotime($value)), date('d', strtotime($value)), date('Y', strtotime($value)));
     }
 
-    private function _check_length($value) {
+    private function _check_length($value) {        
         if (empty($value))
             return FALSE;
 
@@ -107,13 +109,17 @@ class Orm_validation {
     }
     
     private function _check_callback($value) {
-        return call_user_func_array(array($this->callback), array($value));
+        return call_user_func_array(array($this->callback), array($value, &$this));
     }
     
     public function validate(Orm_field $field) {
-        if (call_user_func_array(array($this, "_check_$this->type"), array($field->value)) === FALSE)
+        if (call_user_func_array(array($this, "_check_$this->type"), array($field->value)) === FALSE) {
+            
+            if (empty($this->message)) 
+                $this->message = parent::$CI->lang->line("orm_validation_$this->type");
+            
             return FALSE;
-
+        }
         return TRUE;
     }
 

@@ -5,14 +5,14 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.1.3 (20140729)
+ * @version 3.2.1 (20140729)
  */
+require_once(__DIR__.'/Orm/Orm.php');
 require_once(__DIR__.'/Orm/Orm_table.php');
 require_once(__DIR__.'/Orm/Orm_primary_key.php');
 require_once(__DIR__.'/Orm/Orm_field.php');
 require_once(__DIR__.'/Orm/Orm_association.php');
 require_once(__DIR__.'/Orm/Orm_validation.php');
-require_once(__DIR__.'/Orm/Orm.php');
 require_once(__DIR__.'/Orm/Orm_model.php');
 
 /* End of file Orm.php */

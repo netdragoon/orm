@@ -5,9 +5,9 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.1.3 (20140729)
+ * @version 3.2.1 (20140729)
  */
-class Orm_field {
+class Orm_field extends Orm {
 
     const TYPE_INTEGER = 'int';
     const TYPE_INT = self::TYPE_INTEGER;

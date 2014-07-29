@@ -46,8 +46,16 @@ class user_model extends \Orm_model {
         array('field' => 'dateupdate', 'type' => 'date'),
 	);
     
-    public static function check_password($value) {
-        return ! empty($value);
+    public static function check_password($value, \Orm_validation &$validation) {
+        if (empty($value)) {
+            
+            $validation->message = 'Le mot de passe ne doit pas être vide';
+            //$validation->message = \Orm::$CI->lang->line('orm_validation_check_password');
+            
+            return FALSE;
+        }
+        
+        return TRUE;
     }
     
     //--END_PERSISTANT_CODE

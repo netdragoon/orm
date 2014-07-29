@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.1.3 (20140729)
+ * @version 3.2.1 (20140729)
  */
 class Orm_model extends Orm {
     
@@ -671,8 +671,10 @@ class Orm_model extends Orm {
             $orm_validation = new Orm_validation($validation);
             $orm_field = new Orm_field($config, $this->_data[$validation['field']]);
 
-            if ( ! $orm_validation->validate($orm_field))
-                $errors[$orm_field->name] = $orm_field;
+            if ( ! $orm_validation->validate($orm_field)) {
+                // Définie le message d'erreur
+                $errors[$orm_validation->field] = sprintf($orm_validation->message, $orm_validation->field, $orm_field->value);
+            }
         }
 
         return $errors;
@@ -682,7 +684,7 @@ class Orm_model extends Orm {
      * Vérifie si les valeurs du modèle sont correctes
      * @return boolean
      */
-    public function is_validate() {
+    public function is_valid() {
         // Validation
         $errors = $this->validate();
 
