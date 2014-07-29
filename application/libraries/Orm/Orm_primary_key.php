@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.1.1 (20140725)
+ * @version 3.1.2 (20140729)
  */
 class Orm_primary_key {
 

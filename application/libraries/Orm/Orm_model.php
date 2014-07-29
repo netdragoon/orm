@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.1.1 (20140725)
+ * @version 3.1.2 (20140729)
  */
 class Orm_model extends Orm {
     
@@ -656,7 +656,7 @@ class Orm_model extends Orm {
 
     /**
      * Exécute la vérification d'un modèle et retourne un tableau d'erreurs
-     * @return array
+     * @return array|boolean
      */
     public function validate() {
         $errors = array();
@@ -664,15 +664,15 @@ class Orm_model extends Orm {
         if (empty(static::$validations))
             return $errors;
 
-        foreach (static::$validations as $validation) {
+        foreach (static::$validations as $validation) {  
             if (($config = $this->_get_config_field($validation['field'])) === FALSE)
-                return;
+                return FALSE;
 
             $orm_validation = new Orm_validation($validation);
             $orm_field = new Orm_field($config, $this->_data[$validation['field']]);
 
             if ( ! $orm_validation->validate($orm_field))
-                $errors[] = $orm_field;
+                $errors[$orm_field->name] = $orm_field;
         }
 
         return $errors;
