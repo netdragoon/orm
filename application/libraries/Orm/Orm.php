@@ -77,9 +77,11 @@ class Orm {
     /**
      * Active manuelement le cache
      * @param booblean $status
+     * @param integer $tts
      */
-    public function use_result_cache($status = TRUE) {
+    public function use_result_cache($status = TRUE, $tts = 3600) {
         self::$config['cache'] = $status;
+        self::$config['tts'] = $tts;
     }
 }
 
