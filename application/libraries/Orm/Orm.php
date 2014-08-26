@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.1 (20140729)
+ * @version 3.2.2 (20140826)
  */
 class Orm {
 
@@ -19,7 +19,7 @@ class Orm {
      * Version de l'ORM
      * @var string 
      */
-    protected $version = '3.2.1 (20140729)';
+    protected $version = '3.2.2 (20140826)';
 
     /**
      * Configuration de l'ORM
@@ -70,8 +70,16 @@ class Orm {
      * Retourne la version de l'ORM
      * @return string
      */
-    function get_version() {
+    public function get_version() {
         return $this->version;
+    }
+    
+    /**
+     * Active manuelement le cache
+     * @param type $status
+     */
+    public function use_result_cache($status = TRUE) {
+        self::$config['cache'] = $status;
     }
 }
 

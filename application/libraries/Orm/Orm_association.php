@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.1 (20140729)
+ * @version 3.2.2 (20140826)
  */
 class Orm_association extends Orm {
 
