@@ -76,7 +76,7 @@ class Orm {
     
     /**
      * Active manuelement le cache
-     * @param type $status
+     * @param booblean $status
      */
     public function use_result_cache($status = TRUE) {
         self::$config['cache'] = $status;
