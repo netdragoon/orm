@@ -5,36 +5,48 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.2 (20140826)
+ * @version 3.2.3 (20140903)
  */
 class Orm_model extends Orm {
     
     /**
-     * Contient les valeur du modèle
+     * Les valeur du modèle
      * @var array 
      */
     protected $_data = array();
     
     /**
-     * Contient les champs a mettre à jour
+     * Les champs a mettre à jour
      * @var array 
      */
     protected $_update = array();
     
     /**
-     * Contient l'espace de nom
+     * L'espace de nom
      * @var NULL|string 
      */
     protected $_namespace = NULL;
+    
+    /**
+     * Statut du cache
+     * @var boolean 
+     */
+    protected $_cache = FALSE;
+    
+    /**
+     * Durée du cache
+     * @var interger 
+     */
+    protected $_tts = 0;
 
     /**
      * Constructeur
      * @param NULL|int|Orm_association $data
      */
     function __construct($data = NULL) {
-        // Configuration de l'espace de nom
-        $this->_namespace();
-
+        // Configuration par défaut
+        $this->_config();
+        
         // Connection à la base de donnée
         $this->_connect();
 
@@ -52,13 +64,18 @@ class Orm_model extends Orm {
     }
     
     /**
-     * Configuration de l'espace de nom
+     * Configuration par défaut
      */
-    protected function _namespace() {
+    protected function _config() {
+        // Configuration du cache par défaut
+        $this->_cache = parent::$config['cache'];
+        $this->_tts = parent::$config['tts'];
+        
+        // Configuration de l'espace de nom
         $namespace = explode('\\', get_class($this));
         $this->_namespace = $namespace[0];
     }
-    
+        
     /**
      * Retoune la variable de connexion
      * @return string
@@ -81,6 +98,16 @@ class Orm_model extends Orm {
                 parent::$CI->{$this->_db()}->query("SET @@session.block_encryption_mode = 'aes-256-cbc';");
             }
         }
+    }
+    
+    /**
+     * Gestion manuel du cache
+     * @param booblean $status
+     * @param integer $tts
+     */
+    public function use_result_cache($status = TRUE, $tts = 3600) {
+        $this->_cache = $status;
+        $this->_tts = $tts;
     }
 
     /**
@@ -437,28 +464,37 @@ class Orm_model extends Orm {
         parent::$CI->{$this->_db()}->from($orm_table->name);
 
         // Si le cache est activé
-        if (parent::$config['cache']) {
-            $cache_id = 'orm_'.$orm_table->name;
-            $cache_key = md5(parent::$CI->{$this->_db()}->_compile_select());
+        if ($this->_cache) {
+            $table = "orm_$orm_table->name";
+            $hash = md5(parent::$CI->{$this->_db()}->_compile_select());
+            $key = "{$table}_{$hash}";
+            
+           // Si l'arbre des clés existe
+            if ( ! $keys = parent::$CI->cache->get($table) OR ! isset($keys[$key])) {
+                // Récupère les clés existantes
+                $keys = (is_array($keys)) ? $keys : array();
 
-            // Vérifie si le cache existe
-            if ( ! $data = parent::$CI->cache->get($cache_id) OR ! isset($data[$cache_key])) {
+                // Enregistre la clé
+                $keys[$key] = $key;
 
-                // récupère le cache existant
-                $data = (is_array($data)) ? $data : array();
-
+                // Sauvegarde
+                parent::$CI->cache->save($table, $keys, parent::$config['tts']);
+            }
+            
+            // Si la clé existe
+            if ( ! $result = parent::$CI->cache->get($key)) {
                 // Exécute la requête
-                $data[$cache_key] = parent::$CI->{$this->_db()}->get()->result_array();
+                $result = parent::$CI->{$this->_db()}->get()->result_array();
 
-                // Sauvegarde les résultats en cache
-                parent::$CI->cache->save($cache_id, $data, parent::$config['tts']);
+                // Sauvegarde les résultats
+                parent::$CI->cache->save($key, $result, parent::$config['tts']);
             }
 
             // Vide la requete
             parent::$CI->{$this->_db()}->_reset_select();
 
             // Retoune les résultats en cache
-            return $data[$cache_key];
+            return $result;
         }
 
         // Retourne les résultats sans cache
@@ -508,9 +544,24 @@ class Orm_model extends Orm {
         // Initialisation de l'objet clé primaire
         $orm_primary_key = new Orm_primary_key(static::$primary_key, $this->{static::$primary_key});
 
-        // Suppression du cache
-        if (parent::$config['cache'])
-            parent::$CI->cache->delete('orm_'.$orm_table->name);
+        // Si le cache est activé
+        if ($this->_cache) {
+            // Nom de l'arbre de clés
+            $table = "orm_$orm_table->name";
+            
+            // Si l'arbre de clés existe
+            if ( ! $keys = parent::$CI->cache->get($table)) {
+                if (is_array($keys)) {
+                    // Parcours les clés pour les supprimer
+                    foreach ($keys as $key) {
+                        parent::$CI->cache->delete($key);
+                    }
+                }
+                
+                // Supprime l'arbre de clés
+                parent::$CI->cache->delete($table);
+            }
+        }
         
         // Type de requête
         $has_insert = (empty($orm_primary_key->value) || $force_insert === TRUE) ? TRUE : FALSE;
@@ -551,9 +602,24 @@ class Orm_model extends Orm {
         // Initialisation de l'objet clé primaire
         $orm_primary_key = new Orm_primary_key(static::$primary_key, $this->{static::$primary_key});
 
-        // Supprime le cache
-        if (parent::$config['cache'])
-            parent::$CI->cache->delete('orm_'.$orm_table);
+        // Si le cache est activé
+        if ($this->_cache) {
+            // Nom de l'arbre de clés
+            $table = "orm_$orm_table->name";
+            
+            // Si l'arbre de clés existe
+            if ( ! $keys = parent::$CI->cache->get($table)) {
+                if (is_array($keys)) {
+                    // Parcours les clés pour les supprimer
+                    foreach ($keys as $key) {
+                        parent::$CI->cache->delete($key);
+                    }
+                }
+                
+                // Supprime l'arbre de clés
+                parent::$CI->cache->delete($table);
+            }
+        }
 
         // Exécute la requête
         return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
