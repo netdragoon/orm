@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.3 (20140903)
+ * @version 3.2.4 (20140910)
  */
 class Orm_model extends Orm {
     
@@ -366,6 +366,19 @@ class Orm_model extends Orm {
 
         return $this;
     }
+    
+    /**
+     * Génère un WHERE % OR en SQL
+     * @param mixe $key
+     * @param NULL|string|int|float $value
+     * @param boolean $escape
+     * @return Orm_model
+     */
+    public function or_where($key, $value = NULL, $escape = TRUE) {
+        parent::$CI->{$this->_db()}->or_where($key, $value, $escape);
+
+        return $this;
+    }
 
     /**
      * Génère un WHERE IN en SQL
@@ -379,6 +392,32 @@ class Orm_model extends Orm {
 
         return $this;
     }
+    
+    /**
+     * Génère un WHERE NOT IN en SQL
+     * @param mixe $key
+     * @param NULL|string|int|float $value
+     * @param boolean $escape
+     * @return Orm_model
+     */
+    public function where_not_in($key = NULL, $values = NULL) {
+        parent::$CI->{$this->_db()}->where_not_in($key, $values);
+
+        return $this;
+    }
+    
+    /**
+     * Génère un WHERE OR % NOT IN en SQL
+     * @param mixe $key
+     * @param NULL|string|int|float $value
+     * @param boolean $escape
+     * @return Orm_model
+     */
+    public function or_where_not_in($key = NULL, $values = NULL) {
+        parent::$CI->{$this->_db()}->or_where_not_in($key, $values);
+
+        return $this;
+    }
 
     /**
      * Génère un LIKE en SQL
@@ -389,6 +428,45 @@ class Orm_model extends Orm {
      */
     public function like($field, $match = '', $side = 'both') {
         parent::$CI->{$this->_db()}->like($field, $match, $side);
+
+        return $this;
+    }
+    
+    /**
+     * Génère un OR % LIKE en SQL
+     * @param mixe $field
+     * @param string $match
+     * @param string $side
+     * @return Orm_model
+     */
+    public function or_like($field, $match = '', $side = 'both') {
+        parent::$CI->{$this->_db()}->or_like($field, $match, $side);
+
+        return $this;
+    }
+    
+    /**
+     * Génère un NOT LIKE en SQL
+     * @param mixe $field
+     * @param string $match
+     * @param string $side
+     * @return Orm_model
+     */
+    public function not_like($field, $match = '', $side = 'both') {
+        parent::$CI->{$this->_db()}->or_like($field, $match, $side);
+
+        return $this;
+    }
+    
+    /**
+     * Génère un OR % NOT LIKE en SQL
+     * @param mixe $field
+     * @param string $match
+     * @param string $side
+     * @return Orm_model
+     */
+    public function or_not_like($field, $match = '', $side = 'both') {
+        parent::$CI->{$this->_db()}->or_not_like($field, $match, $side);
 
         return $this;
     }

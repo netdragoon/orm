@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.3 (20140903)
+ * @version 3.2.4 (20140910)
  */
 class Orm {
 
@@ -19,7 +19,7 @@ class Orm {
      * Version de l'ORM
      * @var string 
      */
-    protected $version = '3.2.3 (20140903)';
+    protected $version = '3.2.4 (20140910)';
 
     /**
      * Configuration de l'ORM
