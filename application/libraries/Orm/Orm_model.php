@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.4 (20140910)
+ * @version 3.2.5 (20140912)
  */
 class Orm_model extends Orm {
     
@@ -709,18 +709,24 @@ class Orm_model extends Orm {
      * @return boolean|array
      */
     protected function _get_config_field($name) {
-        // Si le champ n'existe pas
-        if (empty(static::$fields))
+        try {
+            // Si le champ n'existe pas
+            if (empty(static::$fields))
+                return FALSE;
+
+            // Recherche la configuration
+            foreach (static::$fields as $field) {
+                if ($field['name'] === $name)
+                    return $field;
+            }
+
+            throw new Exception("Le champ <b>$name</b> est introuvable dans le modèle <b>".get_class($this)."</b>");
+
+            // Aucune configuration n'a été trouvé
             return FALSE;
-        
-        // Recherche la configuration
-        foreach (static::$fields as $field) {
-            if ($field['name'] === $name)
-                return $field;
+        } catch (Exception $e) {
+            exit("L'ORM a rencontré un problème : {$e->getMessage()}");
         }
-        
-        // Aucune configuration n'a été trouvé
-        return FALSE;
     }
     
     /**
@@ -729,18 +735,24 @@ class Orm_model extends Orm {
      * @return boolean|array
      */
     protected function _get_config_association($association_key) {
-        // Si l'association n'existe pas
-        if (empty(static::$associations))
+        try {
+            // Si l'association n'existe pas
+            if (empty(static::$associations))
+                return FALSE;
+
+            // Recherche la configuration
+            foreach (static::$associations as $association) {
+                if ($association['association_key'] == $association_key)
+                    return $association;
+            }
+
+            throw new Exception("L'association <b>$association_key</b> est introuvable dans le modèle <b>".get_class($this)."</b>");
+
+            // Aucune configuration n'a été trouvé
             return FALSE;
-        
-        // Recherche la configuration
-        foreach (static::$associations as $association) {
-            if ($association['association_key'] == $association_key)
-                return $association;
+        } catch (Exception $e) {
+            exit("L'ORM a rencontré un problème : {$e->getMessage()}");
         }
-        
-        // Aucune configuration n'a été trouvé
-        return FALSE;
     }
     
     /**
@@ -749,18 +761,24 @@ class Orm_model extends Orm {
      * @return boolean|array
      */
     protected function _get_config_validation($field) {
-        // Si la validation n'existe pas
-        if (empty(static::$validations))
+        try {
+            // Si la validation n'existe pas
+            if (empty(static::$validations))
+                return FALSE;
+
+            // Recherche la configuration
+            foreach (static::$validations as $validation) {
+                if ($validation['field'] == $field)
+                    return $validation;
+            }
+
+            throw new Exception("La validation du champ <b>$field</b> est introuvable dans le modèle <b>".get_class($this)."</b>");
+
+            // Aucune configuration n'a été trouvé
             return FALSE;
-        
-        // Recherche la configuration
-        foreach (static::$validations as $validation) {
-            if ($validation['field'] == $field)
-                return $validation;
+        } catch (Exception $e) {
+            exit("L'ORM a rencontré un problème : {$e->getMessage()}");
         }
-        
-        // Aucune configuration n'a été trouvé
-        return FALSE;
     }
 
     /**
