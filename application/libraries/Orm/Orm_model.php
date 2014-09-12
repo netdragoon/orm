@@ -628,7 +628,7 @@ class Orm_model extends Orm {
             $table = "orm_$orm_table->name";
             
             // Si l'arbre de clés existe
-            if ( ! $keys = parent::$CI->cache->get($table)) {
+            if ($keys = parent::$CI->cache->get($table)) {
                 if (is_array($keys)) {
                     // Parcours les clés pour les supprimer
                     foreach ($keys as $key) {
@@ -686,7 +686,7 @@ class Orm_model extends Orm {
             $table = "orm_$orm_table->name";
             
             // Si l'arbre de clés existe
-            if ( ! $keys = parent::$CI->cache->get($table)) {
+            if ($keys = parent::$CI->cache->get($table)) {
                 if (is_array($keys)) {
                     // Parcours les clés pour les supprimer
                     foreach ($keys as $key) {
