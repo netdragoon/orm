@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.5 (20140912)
+ * @version 3.2.6 (20140915)
  */
 class Orm_model extends Orm {
     
@@ -719,8 +719,12 @@ class Orm_model extends Orm {
                 if ($field['name'] === $name)
                     return $field;
             }
+            
+            $error = (parent::$CI->input->is_cli_request())
+                ? "Le champ $name est introuvable dans le modèle ".get_class($this).PHP_EOL
+                : "Le champ <b>$name</b> est introuvable dans le modèle <b>".get_class($this)."</b></br/>";
 
-            throw new Exception("Le champ <b>$name</b> est introuvable dans le modèle <b>".get_class($this)."</b>");
+            throw new Exception($error);
 
             // Aucune configuration n'a été trouvé
             return FALSE;
@@ -745,8 +749,12 @@ class Orm_model extends Orm {
                 if ($association['association_key'] == $association_key)
                     return $association;
             }
+            
+            $error = (parent::$CI->input->is_cli_request())
+                ? "L'association $association_key est introuvable dans le modèle ".get_class($this).PHP_EOL
+                : "L'association <b>$association_key</b> est introuvable dans le modèle <b>".get_class($this)."</b></br/>";
 
-            throw new Exception("L'association <b>$association_key</b> est introuvable dans le modèle <b>".get_class($this)."</b>");
+            throw new Exception($error);
 
             // Aucune configuration n'a été trouvé
             return FALSE;
@@ -771,8 +779,12 @@ class Orm_model extends Orm {
                 if ($validation['field'] == $field)
                     return $validation;
             }
+            
+            $error = (parent::$CI->input->is_cli_request())
+                ? "La validation du champ $field est introuvable dans le modèle ".get_class($this).PHP_EOL
+                : "La validation du champ <b>$field</b> est introuvable dans le modèle <b>".get_class($this)."</b></br/>";
 
-            throw new Exception("La validation du champ <b>$field</b> est introuvable dans le modèle <b>".get_class($this)."</b>");
+            throw new Exception($error);
 
             // Aucune configuration n'a été trouvé
             return FALSE;
