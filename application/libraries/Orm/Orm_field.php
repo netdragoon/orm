@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.6 (20140915)
+ * @version 3.2.7 (20140917)
  */
 class Orm_field extends Orm {
 
@@ -71,7 +71,7 @@ class Orm_field extends Orm {
             }
         }
 
-        if ($this->allow_null === TRUE && empty($this->value)) {
+        if ($this->allow_null === TRUE && $this->value == '') {
             return $this->value = NULL;
         }
 
