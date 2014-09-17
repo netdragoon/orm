@@ -59,7 +59,11 @@ class Orm_field extends Orm {
         if (empty($this->default_value))
             $this->default_value = FALSE;
     }
-
+    
+    /**
+     * Converti la valeur d'un champ
+     * @return mixe
+     */
     public function convert() {
         if ( ! empty($this->default_value) && empty($this->value)) {
             
