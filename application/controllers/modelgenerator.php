@@ -5,7 +5,7 @@
  * has_one      : un utilisateur n'a qu'une nationnalité (id_nationnalité dans users)
  * has_many     : un groupe a plusieurs membres
  * belongs_to   : plusieurs vidéos appartiennent à une utilisateur (id_user dans users_videos)
- * @version 3.2.7 (20140917)
+ * @version 3.2.8 (20141111)
  */
 class Modelgenerator extends CI_Controller {
 
@@ -91,7 +91,10 @@ class Modelgenerator extends CI_Controller {
 			"has_many" => "belongs_to",
 			"has_one" => "has_one"
 		);
-		
+        
+        if ( ! $this->{"db_$namespace"}->conn_id)
+            exit("Impossible de se connecté à la base <b>$namespace</b> (database.php).");
+        		
 		$query_table = $this->{"db_$namespace"}->query("SHOW TABLE STATUS");
 		
 		foreach ($query_table->result_array() as $table) {

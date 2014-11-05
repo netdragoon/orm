@@ -4,7 +4,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.7 (20140917)
+ * @version 3.2.8 (20141111)
  */
 
 $lang['orm_validation_email'] = "Le champ %s doit être un email valide";
