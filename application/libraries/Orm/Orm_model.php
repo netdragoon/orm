@@ -81,7 +81,7 @@ class Orm_model extends Orm {
      * @return string
      */
     protected function _db() {
-        return 'db_'.$this->_namespace;
+        return "db_$this->_namespace";
     }
 
     /**
@@ -708,31 +708,7 @@ class Orm_model extends Orm {
         // Exécute la requête
         return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
     }
-    
-    /**
-     * Initialise une transaction
-     * @return boolean
-     */
-    public function trans_begin($test_mode = FALSE) {
-        return parent::$CI->{$this->_db()}->trans_begin($test_mode);
-    }
-    
-    /**
-     * Annule la transaction
-     * @return boolean
-     */
-    public function trans_rollback() {
-        return parent::$CI->{$this->_db()}->trans_rollback();
-    }
-
-    /**
-     * Sauvegarde la transaction
-     * @return boolean
-     */
-    public function trans_commit() {
-        return parent::$CI->{$this->_db()}->trans_commit();
-    }
-    
+        
     /**
      * Recherche la configuration d'un champ
      * @param string $name
