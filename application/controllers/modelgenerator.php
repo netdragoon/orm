@@ -5,7 +5,7 @@
  * has_one      : un utilisateur n'a qu'une nationnalité (id_nationnalité dans users)
  * has_many     : un groupe a plusieurs membres
  * belongs_to   : plusieurs vidéos appartiennent à une utilisateur (id_user dans users_videos)
- * @version 3.2.8 (20141111)
+ * @version 3.2.9 (20141111)
  */
 class Modelgenerator extends CI_Controller {
 

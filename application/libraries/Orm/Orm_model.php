@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.8 (20141111)
+ * @version 3.2.9 (20141111)
  */
 class Orm_model extends Orm {
     
@@ -613,7 +613,7 @@ class Orm_model extends Orm {
     /**
      * Sauvegarde un modèle en base de donnée
      * @param boolean $force_insert
-     * @return boolean|integer
+     * @return boolean
      */
     public function save($force_insert = FALSE) {
         // Initialisation de l'objet table
@@ -649,12 +649,17 @@ class Orm_model extends Orm {
         
         // Si la requete est de type insert
         if ($has_insert) {
-           // Exécute la requête
-            parent::$CI->{$this->_db()}->from($orm_table->name);
-            parent::$CI->{$this->_db()}->insert();
-
-            // Retourne l'id
-            return $this->{$orm_primary_key->name} = parent::$CI->{$this->_db()}->insert_id();
+            // Exécute la requête
+            $query = parent::$CI->{$this->_db()}->from($orm_table->name)->insert();
+            
+            // Si l'insertion est correcte
+            if ($query === TRUE) {
+                // Met a jour la clé primaire
+                $this->{$orm_primary_key->name} = parent::$CI->{$this->_db()}->insert_id();
+            }
+            
+            // Retourne le résultat de la requête
+            return $query;
             
          // Si la requete est de type update
         } else {
@@ -663,10 +668,11 @@ class Orm_model extends Orm {
                 return FALSE;
             
             // Exécute la requête
-            parent::$CI->{$this->_db()}->from($orm_table->name);
-            parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value);
-            return parent::$CI->{$this->_db()}->update();
+            return parent::$CI->{$this->_db()}->from($orm_table->name)->where($orm_primary_key->name, $orm_primary_key->value)->update();
         }
+        
+        // La requête a échoué
+        return FALSE;
     }
 
     /**
@@ -701,6 +707,69 @@ class Orm_model extends Orm {
 
         // Exécute la requête
         return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
+    }
+    
+    /**
+     * Désactive une transaction
+     */
+    public function trans_off() {
+        parent::$CI->{$this->_db()}->trans_off();
+    }
+    
+    /**
+     * Active le mode strict d'une transaction
+     */
+    public function trans_strict($mode = TRUE) {
+        parent::$CI->{$this->_db()}->trans_strict($mode);
+    }
+    
+    /**
+     * Démarre une transaction
+     * @param boolean $test_mode
+     * @return boolean
+     */
+    public function trans_start($test_mode = FALSE) {
+        return parent::$CI->{$this->_db()}->trans_start($test_mode);
+    }
+    
+    /**
+     * Exécute automatiquement une transaction
+     * @return type
+     */
+    public function trans_complete() {
+        return parent::$CI->{$this->_db()}->trans_complete();
+    }
+    
+    /**
+     * Retourne si une transaction est correcte
+     * @return boolean
+     */
+    public function trans_status() {
+        return parent::$CI->{$this->_db()}->trans_status();
+    }
+    
+    /**
+     * Sauvegarde la transaction
+     * @return boolean
+     */
+    public function trans_commit() {
+        return parent::$CI->{$this->_db()}->trans_commit();
+    }
+    
+    /**
+     * Annule la transaction
+     * @return boolean
+     */
+    public function trans_rollback() {
+        return parent::$CI->{$this->_db()}->trans_rollback();
+    }
+
+    /**
+     * Initialise une transaction
+     * @return boolean
+     */
+    public function trans_begin($test_mode = FALSE) {
+        return parent::$CI->{$this->_db()}->trans_begin($test_mode);
     }
     
     /**
