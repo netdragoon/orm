@@ -710,50 +710,11 @@ class Orm_model extends Orm {
     }
     
     /**
-     * Désactive une transaction
-     */
-    public function trans_off() {
-        parent::$CI->{$this->_db()}->trans_off();
-    }
-    
-    /**
-     * Active le mode strict d'une transaction
-     */
-    public function trans_strict($mode = TRUE) {
-        parent::$CI->{$this->_db()}->trans_strict($mode);
-    }
-    
-    /**
-     * Démarre une transaction
-     * @param boolean $test_mode
+     * Initialise une transaction
      * @return boolean
      */
-    public function trans_start($test_mode = FALSE) {
-        return parent::$CI->{$this->_db()}->trans_start($test_mode);
-    }
-    
-    /**
-     * Exécute automatiquement une transaction
-     * @return type
-     */
-    public function trans_complete() {
-        return parent::$CI->{$this->_db()}->trans_complete();
-    }
-    
-    /**
-     * Retourne si une transaction est correcte
-     * @return boolean
-     */
-    public function trans_status() {
-        return parent::$CI->{$this->_db()}->trans_status();
-    }
-    
-    /**
-     * Sauvegarde la transaction
-     * @return boolean
-     */
-    public function trans_commit() {
-        return parent::$CI->{$this->_db()}->trans_commit();
+    public function trans_begin($test_mode = FALSE) {
+        return parent::$CI->{$this->_db()}->trans_begin($test_mode);
     }
     
     /**
@@ -765,11 +726,11 @@ class Orm_model extends Orm {
     }
 
     /**
-     * Initialise une transaction
+     * Sauvegarde la transaction
      * @return boolean
      */
-    public function trans_begin($test_mode = FALSE) {
-        return parent::$CI->{$this->_db()}->trans_begin($test_mode);
+    public function trans_commit() {
+        return parent::$CI->{$this->_db()}->trans_commit();
     }
     
     /**
