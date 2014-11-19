@@ -374,16 +374,18 @@ class Modelgenerator extends CI_Controller {
 			$filename = $table['Name'].'_model.php';
             			
 			// Si il exite un override
-			if ( ! empty($this->override[$filename])) {           
+			if ( ! empty($this->override[$filename])) {
 				$this->_append($this->override[$filename]);
 			}
 			
 			$this->_append('}'."\r\n");
 			$this->_append("\r\n");
-						
-			$fp = fopen(FCPATH.APPPATH.'models/'.$namespace.'/'.$filename, 'w+');
 			
-			echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:green">OK</b><br />';
+			if ($fp = fopen(FCPATH.APPPATH.'models/'.$namespace.'/'.$filename, 'w+')) {
+                echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:green">OK</b><br />';
+            } else {
+                echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:red">KO</b><br />';
+            }
 			
 			fputs($fp, $this->model_output);
 			fclose($fp);
