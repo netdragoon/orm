@@ -28,6 +28,12 @@ class Orm_model extends Orm {
     protected $_namespace = NULL;
     
     /**
+     * Resource db
+     * @var NULL|string 
+     */
+    protected $_db = NULL;
+    
+    /**
      * Statut du cache
      * @var boolean 
      */
@@ -81,25 +87,22 @@ class Orm_model extends Orm {
     }
         
     /**
-     * Retoune la variable de connexion
-     * @return string
-     */
-    protected function _db() {
-        return "db_$this->_namespace";
-    }
-
-    /**
      * Connection à la base de donnée
      */
     protected function _connect() {
+        $db = "db_$this->_namespace";
+        
         // Si il exite une connxion		
-        if ( ! isset(parent::$CI->{$this->_db()})) {
+        if ( ! isset(parent::$CI->{$db})) {
             // Nouvelle connexion
-            parent::$CI->{$this->_db()} = parent::$CI->load->database($this->_namespace, TRUE);
+            parent::$CI->{$db} = parent::$CI->load->database($this->_namespace, TRUE);
+            
+            // Création de la resource
+            $this->_db =& parent::$CI->{$db};
             
             // Si le cryptage est actif charge les éléments indispensable au cryptage
             if (parent::$config['encryption_enable']) {
-                parent::$CI->{$this->_db()}->query("SET @@session.block_encryption_mode = 'aes-256-cbc';");
+                $this->_db->query("SET @@session.block_encryption_mode = 'aes-256-cbc';");
             }
         }
     }
@@ -149,8 +152,8 @@ class Orm_model extends Orm {
                     'quote' => NULL
                 );
             }
-
-            parent::$CI->{$this->_db()}->select($output['field'], $output['quote']);
+            
+            $this->_db->select($output['field'], $output['quote']);
         }
     }
     
@@ -182,7 +185,7 @@ class Orm_model extends Orm {
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $input = array(
                     'field' => $orm_field->name,
-                    'value' => "TO_BASE64(AES_ENCRYPT('".parent::$CI->{$this->_db()}->escape_str($orm_field->value)."', UNHEX('".parent::$config['encryption_key']."'), UNHEX('".$vector_value."')))",
+                    'value' => "TO_BASE64(AES_ENCRYPT('".$this->_db->escape_str($orm_field->value)."', UNHEX('".parent::$config['encryption_key']."'), UNHEX('".$vector_value."')))",
                     'quote' => FALSE
                 );
 
@@ -203,7 +206,7 @@ class Orm_model extends Orm {
             } else if (parent::$config['binary_enable'] && $orm_field->binary) {
                 $input = array(
                     'field' => $orm_field->name,
-                    'value' => "FROM_BASE64('".parent::$CI->{$this->_db()}->escape_str($orm_field->value)."')",
+                    'value' => "FROM_BASE64('".$this->_db->escape_str($orm_field->value)."')",
                     'quote' => FALSE
                 );
 
@@ -218,7 +221,7 @@ class Orm_model extends Orm {
             
             // Si le champ doit être mis a jour
             if (in_array($name, $this->_update))
-                parent::$CI->{$this->_db()}->set($input['field'], $input['value'], $input['quote']);
+                $this->_db->set($input['field'], $input['value'], $input['quote']);
         }
         
         // Si il y a des champs a modifier
@@ -246,7 +249,7 @@ class Orm_model extends Orm {
      * @return integer|string|float
      */
     public function __get($name) {
-        if ( ! array_key_exists($name, $this->_data))
+        if ( ! isset($this->_data[$name]))
             return FALSE;
 
         return $this->_data[$name];
@@ -352,6 +355,14 @@ class Orm_model extends Orm {
     }
     
     /**
+     * Retoune le nom de la resource
+     * @return string
+     */
+    protected function get_db() {
+        return $this->_db;
+    }
+    
+    /**
      * Retoune l'espace de nom
      * @return string
      */
@@ -381,7 +392,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where($key, $value = NULL, $escape = TRUE) {
-        parent::$CI->{$this->_db()}->where($key, $value, $escape);
+        $this->_db->where($key, $value, $escape);
 
         return $this;
     }
@@ -394,7 +405,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_where($key, $value = NULL, $escape = TRUE) {
-        parent::$CI->{$this->_db()}->or_where($key, $value, $escape);
+        $this->_db->or_where($key, $value, $escape);
 
         return $this;
     }
@@ -407,7 +418,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where_in($key = NULL, $values = NULL) {
-        parent::$CI->{$this->_db()}->where_in($key, $values);
+        $this->_db->where_in($key, $values);
 
         return $this;
     }
@@ -420,7 +431,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where_not_in($key = NULL, $values = NULL) {
-        parent::$CI->{$this->_db()}->where_not_in($key, $values);
+        $this->_db->where_not_in($key, $values);
 
         return $this;
     }
@@ -433,7 +444,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_where_not_in($key = NULL, $values = NULL) {
-        parent::$CI->{$this->_db()}->or_where_not_in($key, $values);
+        $this->_db->or_where_not_in($key, $values);
 
         return $this;
     }
@@ -446,7 +457,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function like($field, $match = '', $side = 'both') {
-        parent::$CI->{$this->_db()}->like($field, $match, $side);
+        $this->_db->like($field, $match, $side);
 
         return $this;
     }
@@ -459,7 +470,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_like($field, $match = '', $side = 'both') {
-        parent::$CI->{$this->_db()}->or_like($field, $match, $side);
+        $this->_db->or_like($field, $match, $side);
 
         return $this;
     }
@@ -472,7 +483,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function not_like($field, $match = '', $side = 'both') {
-        parent::$CI->{$this->_db()}->or_like($field, $match, $side);
+        $this->_db->or_like($field, $match, $side);
 
         return $this;
     }
@@ -485,7 +496,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_not_like($field, $match = '', $side = 'both') {
-        parent::$CI->{$this->_db()}->or_not_like($field, $match, $side);
+        $this->_db->or_not_like($field, $match, $side);
 
         return $this;
     }
@@ -496,7 +507,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function group_by($by) {
-        parent::$CI->{$this->_db()}->group_by($by);
+        $this->_db->group_by($by);
 
         return $this;
     }
@@ -509,7 +520,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function having($key, $value = '', $escape = TRUE) {
-        parent::$CI->{$this->_db()}->having($key, $value, $escape);
+        $this->_db->having($key, $value, $escape);
 
         return $this;
     }
@@ -521,7 +532,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function order_by($orderby, $direction = '') {
-        parent::$CI->{$this->_db()}->order_by($orderby, $direction);
+        $this->_db->order_by($orderby, $direction);
 
         return $this;
     }
@@ -533,7 +544,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function limit($value, $offset = '') {
-        parent::$CI->{$this->_db()}->limit($value, $offset);
+        $this->_db->limit($value, $offset);
 
         return $this;
     }
@@ -543,7 +554,7 @@ class Orm_model extends Orm {
      * @return int
      */
     public function count() {
-        return (int) parent::$CI->{$this->_db()}->count_all_results(static::$table);
+        return (int) $this->_db->count_all_results(static::$table);
     }
 
     /**
@@ -558,12 +569,12 @@ class Orm_model extends Orm {
         $this->_select();
 
         // Prépare le from
-        parent::$CI->{$this->_db()}->from($orm_table->name);
+        $this->_db->from($orm_table->name);
 
         // Si le cache est activé
         if ($this->_cache) {
             $table = "orm_$orm_table->name";
-            $hash = md5(parent::$CI->{$this->_db()}->_compile_select());
+            $hash = md5($this->_db->_compile_select());
             $key = "{$table}_{$hash}";
             
            // Si l'arbre des clés existe
@@ -581,21 +592,21 @@ class Orm_model extends Orm {
             // Si la clé existe
             if ( ! $result = parent::$CI->cache->get($key)) {
                 // Exécute la requête
-                $result = parent::$CI->{$this->_db()}->get()->result_array();
+                $result = $this->_db->get()->result_array();
 
                 // Sauvegarde les résultats
                 parent::$CI->cache->save($key, $result, parent::$config['tts']);
             }
 
             // Vide la requete
-            parent::$CI->{$this->_db()}->_reset_select();
+            $this->_db->_reset_select();
 
             // Retoune les résultats en cache
             return $result;
         }
 
         // Retourne les résultats sans cache
-        return parent::$CI->{$this->_db()}->get()->result_array();
+        return $this->_db->get()->result_array();
     }
 
     /**
@@ -620,7 +631,7 @@ class Orm_model extends Orm {
      */
     public function find_one() {
         // Limite la requête a un objet
-        parent::$CI->{$this->_db()}->limit(1);
+        $this->_db->limit(1);
 
         // Exécute la requête
         $objects = $this->find();
@@ -669,12 +680,12 @@ class Orm_model extends Orm {
         // Si la requete est de type insert
         if ($has_insert) {
             // Exécute la requête
-            $query = parent::$CI->{$this->_db()}->from($orm_table->name)->insert();
+            $query = $this->_db->from($orm_table->name)->insert();
             
             // Si l'insertion est correcte
             if ($query === TRUE) {
                 // Met a jour la clé primaire
-                $this->{$orm_primary_key->name} = parent::$CI->{$this->_db()}->insert_id();
+                $this->{$orm_primary_key->name} = $this->_db->insert_id();
             }
             
             // Retourne le résultat de la requête
@@ -687,7 +698,7 @@ class Orm_model extends Orm {
                 return FALSE;
             
             // Exécute la requête
-            return parent::$CI->{$this->_db()}->from($orm_table->name)->where($orm_primary_key->name, $orm_primary_key->value)->update();
+            return $this->_db->from($orm_table->name)->where($orm_primary_key->name, $orm_primary_key->value)->update();
         }
         
         // La requête a échoué
@@ -725,7 +736,7 @@ class Orm_model extends Orm {
         }
 
         // Exécute la requête
-        return parent::$CI->{$this->_db()}->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
+        return $this->_db->where($orm_primary_key->name, $orm_primary_key->value)->delete($orm_table->name);
     }
         
     /**
@@ -840,13 +851,13 @@ class Orm_model extends Orm {
     protected function _association_find(Orm_association $association) {
         switch ($association->type) {
             case Orm_association::TYPE_HAS_ONE:
-                parent::$CI->{$this->_db()}->where($association->primary_key, $association->value)->limit(1);
+                $this->_db->where($association->primary_key, $association->value)->limit(1);
                 break;
             case Orm_association::TYPE_HAS_MANY:
-                parent::$CI->{$this->_db()}->where($association->foreign_key, $association->value);
+                $this->_db->where($association->foreign_key, $association->value);
                 break;
             case Orm_association::TYPE_BELONGS_TO:
-                parent::$CI->{$this->_db()}->where($association->primary_key, $association->value)->limit(1);
+                $this->_db->where($association->primary_key, $association->value)->limit(1);
                 break;
         }
 
