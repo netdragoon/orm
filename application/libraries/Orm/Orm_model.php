@@ -34,6 +34,12 @@ class Orm_model extends Orm {
     protected $_db = NULL;
     
     /**
+     * Configuration du model
+     * @var boolean 
+     */
+    protected $_config = array();
+    
+    /**
      * Statut du cache
      * @var boolean 
      */
@@ -84,6 +90,24 @@ class Orm_model extends Orm {
         // Configuration de l'espace de nom
         $namespace = explode('\\', get_class($this));
         $this->_namespace = $namespace[0];
+        
+        // Génère la configuration des champs
+        if (isset(static::$fields)) {
+            foreach (static::$fields as $field)
+                $this->config['fields'][$field['name']] = $field;
+        }
+        
+        // Génère la configuration des associations
+        if (isset(static::$associations)) {
+            foreach (static::$associations as $field)
+                $this->config['associations'][$field['association_key']] = $field;
+        }
+        
+        // Génère la configuration des validations
+        if (isset(static::$validations)) {
+            foreach (static::$validations as $field)
+                $this->config['validations'][$field['field']] = $field;
+        }
     }
         
     /**
@@ -746,15 +770,9 @@ class Orm_model extends Orm {
      */
     protected function _get_config_field($name) {
         try {
-            // Si le champ n'existe pas
-            if (empty(static::$fields))
-                return FALSE;
-
-            // Recherche la configuration
-            foreach (static::$fields as $field) {
-                if ($field['name'] === $name)
-                    return $field;
-            }
+            // Si le champ existe
+            if (isset($this->config['fields'][$name]))
+                return $this->config['fields'][$name];
             
             $error = (parent::$CI->input->is_cli_request())
                 ? "Le champ $name est introuvable dans le modèle ".get_class($this).PHP_EOL
@@ -776,15 +794,9 @@ class Orm_model extends Orm {
      */
     protected function _get_config_association($association_key) {
         try {
-            // Si l'association n'existe pas
-            if (empty(static::$associations))
-                return FALSE;
-
-            // Recherche la configuration
-            foreach (static::$associations as $association) {
-                if ($association['association_key'] == $association_key)
-                    return $association;
-            }
+            // Si le champ existe
+            if (isset($this->config['associations'][$association_key]))
+                return $this->config['associations'][$association_key];
             
             $error = (parent::$CI->input->is_cli_request())
                 ? "L'association $association_key est introuvable dans le modèle ".get_class($this).PHP_EOL
@@ -806,15 +818,9 @@ class Orm_model extends Orm {
      */
     protected function _get_config_validation($field) {
         try {
-            // Si la validation n'existe pas
-            if (empty(static::$validations))
-                return FALSE;
-
-            // Recherche la configuration
-            foreach (static::$validations as $validation) {
-                if ($validation['field'] == $field)
-                    return $validation;
-            }
+            // Si le champ existe
+            if (isset($this->config['validations'][$field]))
+                return $this->config['validations'][$field];
             
             $error = (parent::$CI->input->is_cli_request())
                 ? "La validation du champ $field est introuvable dans le modèle ".get_class($this).PHP_EOL
