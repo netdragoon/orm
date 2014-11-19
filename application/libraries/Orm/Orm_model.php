@@ -96,15 +96,15 @@ class Orm_model extends Orm {
         if ( ! isset(parent::$CI->{$db})) {
             // Nouvelle connexion
             parent::$CI->{$db} = parent::$CI->load->database($this->_namespace, TRUE);
-            
-            // Création de la resource
-            $this->_db =& parent::$CI->{$db};
-            
+                        
             // Si le cryptage est actif charge les éléments indispensable au cryptage
             if (parent::$config['encryption_enable']) {
-                $this->_db->query("SET @@session.block_encryption_mode = 'aes-256-cbc';");
+                parent::$CI->{$db}->query("SET @@session.block_encryption_mode = 'aes-256-cbc';");
             }
         }
+        
+        // Création de la resource
+        $this->_db =& parent::$CI->{$db};
     }
     
     /**
