@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.9 (20141111)
+ * @version 3.2.10 (20141119)
  */
 class Orm_model extends Orm {
     
@@ -57,9 +57,13 @@ class Orm_model extends Orm {
         if (is_numeric($data)) {
             $this->_primary_key_find(new Orm_primary_key(static::$primary_key, $data));
 
-            // Si la variable $data est une instance de la classe Orm_association
+        // Si la variable $data est une instance de la classe Orm_association
         } else if ($data instanceof Orm_association) {
             $this->_association_find($data);
+        
+        // Si la variable $data est un tableau 
+        } else if (is_array($data)) {
+            $this->set($data);
         }
     }
     
@@ -255,7 +259,7 @@ class Orm_model extends Orm {
      */
     public function __set($name, $value) {
         // Si le champ existe
-        if (array_key_exists($name, $this->_data)) {
+        if (isset($this->_data[$name])) {
             // Cast la valeur
             $this->_convert($name, $value);
 
@@ -284,14 +288,29 @@ class Orm_model extends Orm {
     }
     
     /**
-     * Retoune les valueurs du modèle
+     * Retoune les valeurs du modèle
+     * @param mixe $name
      * @return mixe
      */
-    public function get($key = NULL) {
-        if ( ! empty($key))
-            return isset($this->_data[$key]) ? $this->_data[$key] : FALSE;
+    public function get($name = NULL) {
+        if ( ! empty($name))
+            return isset($this->_data[$name]) ? $this->_data[$name] : FALSE;
         
         return $this->_data;
+    }
+    
+    /**
+     * Modifie les valeurs du modèle
+     * @param array $data
+     */
+    public function set(array $data) {
+        foreach ($data as $name => $value) {
+            // Si le champs existe
+            if (isset($this->_data[$name])) {
+                // Met a jour le champ
+                $this->{$name} = $value;
+            }
+        }
     }
 
     /**
