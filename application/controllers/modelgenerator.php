@@ -356,7 +356,7 @@ class Modelgenerator extends CI_Controller {
 						}
 					}
 
-					if ($relation_type != "") {
+					if ( ! empty($relation_type) &&  ! empty($referenced_table_name)) {
 						$relations_javadoc_buffer .= "\t * @method {$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
                         $relations_buffer .= "\t\tarray('association_key' => '$referenced_table_name', 'model' => '{$referenced_table_name}_model', 'type' => '$relation_type', 'primary_key' => '$referenced_column_name', 'foreign_key' => '$column_name'),\r\n";
 					}
