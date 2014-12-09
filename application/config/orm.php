@@ -7,7 +7,6 @@
  * @link https://github.com/maltyxx/sag-orm
  * @version 3.2.10 (20141119)
  */
-
 $config['orm'] = array(
     'cache' => FALSE,
     'tts' => 3600,
