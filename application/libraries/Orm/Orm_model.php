@@ -92,21 +92,21 @@ class Orm_model extends Orm {
         $this->_namespace = $namespace[0];
         
         // Génère la configuration des champs
-        if (isset(static::$fields)) {
+        if (isset(static::$fields)) {        
             foreach (static::$fields as $field)
-                $this->config['fields'][$field['name']] = $field;
+                $this->_config['fields'][$field['name']] = $field;
         }
         
         // Génère la configuration des associations
         if (isset(static::$associations)) {
             foreach (static::$associations as $field)
-                $this->config['associations'][$field['association_key']] = $field;
+                $this->_config['associations'][$field['association_key']] = $field;
         }
         
         // Génère la configuration des validations
         if (isset(static::$validations)) {
             foreach (static::$validations as $field)
-                $this->config['validations'][$field['field']] = $field;
+                $this->_config['validations'][$field['field']] = $field;
         }
     }
         
@@ -115,7 +115,7 @@ class Orm_model extends Orm {
      */
     protected function _connect() {
         $db = "db_$this->_namespace";
-        
+                
         // Si il exite une connxion		
         if ( ! isset(parent::$CI->{$db})) {
             // Nouvelle connexion
@@ -162,12 +162,12 @@ class Orm_model extends Orm {
 
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $output = array(
-                    'field' => "CONVERT(AES_DECRYPT(FROM_BASE64(`".$orm_field->name."`), UNHEX('".parent::$config['encryption_key']."'), UNHEX(`vector`)) USING 'utf8') AS `".$orm_field->name."`",
+                    'field' => "CONVERT(AES_DECRYPT(FROM_BASE64(`$orm_field->name`), UNHEX('".parent::$config['encryption_key']."'), UNHEX(`vector`)) USING 'utf8') AS `$orm_field->name`",
                     'quote' => FALSE
                 );
             } else if (parent::$config['binary_enable'] && $orm_field->binary) {
                 $output = array(
-                    'field' => "TO_BASE64(`".$orm_field->name."`) AS `".$orm_field->name."`",
+                    'field' => "TO_BASE64(`$orm_field->name`) AS `$orm_field->name`",
                     'quote' => FALSE
                 );
             } else {
@@ -209,7 +209,7 @@ class Orm_model extends Orm {
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $input = array(
                     'field' => $orm_field->name,
-                    'value' => "TO_BASE64(AES_ENCRYPT('".$this->_db->escape_str($orm_field->value)."', UNHEX('".parent::$config['encryption_key']."'), UNHEX('".$vector_value."')))",
+                    'value' => "TO_BASE64(AES_ENCRYPT('{$this->_db->escape_str($orm_field->value)}', UNHEX('".parent::$config['encryption_key']."'), UNHEX('$vector_value')))",
                     'quote' => FALSE
                 );
 
@@ -230,7 +230,7 @@ class Orm_model extends Orm {
             } else if (parent::$config['binary_enable'] && $orm_field->binary) {
                 $input = array(
                     'field' => $orm_field->name,
-                    'value' => "FROM_BASE64('".$this->_db->escape_str($orm_field->value)."')",
+                    'value' => "FROM_BASE64('{$this->_db->escape_str($orm_field->value)}')",
                     'quote' => FALSE
                 );
 
@@ -771,8 +771,8 @@ class Orm_model extends Orm {
     protected function _get_config_field($name) {
         try {
             // Si le champ existe
-            if (isset($this->config['fields'][$name]))
-                return $this->config['fields'][$name];
+            if (isset($this->_config['fields'][$name]))
+                return $this->_config['fields'][$name];
             
             $error = (parent::$CI->input->is_cli_request())
                 ? "Le champ $name est introuvable dans le modèle ".get_class($this).PHP_EOL
@@ -795,8 +795,8 @@ class Orm_model extends Orm {
     protected function _get_config_association($association_key) {
         try {
             // Si le champ existe
-            if (isset($this->config['associations'][$association_key]))
-                return $this->config['associations'][$association_key];
+            if (isset($this->_config['associations'][$association_key]))
+                return $this->_config['associations'][$association_key];
             
             $error = (parent::$CI->input->is_cli_request())
                 ? "L'association $association_key est introuvable dans le modèle ".get_class($this).PHP_EOL
@@ -819,8 +819,8 @@ class Orm_model extends Orm {
     protected function _get_config_validation($field) {
         try {
             // Si le champ existe
-            if (isset($this->config['validations'][$field]))
-                return $this->config['validations'][$field];
+            if (isset($this->_config['validations'][$field]))
+                return $this->_config['validations'][$field];
             
             $error = (parent::$CI->input->is_cli_request())
                 ? "La validation du champ $field est introuvable dans le modèle ".get_class($this).PHP_EOL
