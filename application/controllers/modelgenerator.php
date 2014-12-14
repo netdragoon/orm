@@ -44,7 +44,7 @@ class Modelgenerator extends CI_Controller {
 
 	private function _dir($dir) {
 		if ( ! file_exists($dir)) {
-			if ( ! mkdir($dir, 0644)) {
+			if ( ! mkdir($dir, 0755)) {
 				return FALSE;
 			}
 		}
@@ -380,15 +380,18 @@ class Modelgenerator extends CI_Controller {
 			
 			$this->_append('}'."\r\n");
 			$this->_append("\r\n");
+            
+            $file_path = FCPATH.APPPATH.'models/'.$namespace.'/'.$filename;
 			
-			if ($fp = fopen(FCPATH.APPPATH.'models/'.$namespace.'/'.$filename, 'w+')) {
+			if (touch($file_path)) {
+                file_put_contents($file_path, $this->model_output);
+                chmod($file_path, 0644);
+                
                 echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:green">OK</b><br />';
+                
             } else {
                 echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:red">KO</b><br />';
             }
-			
-			fputs($fp, $this->model_output);
-			fclose($fp);
 		}
 		
 		$this->association = array();
