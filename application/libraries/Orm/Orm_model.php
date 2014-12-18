@@ -378,7 +378,7 @@ class Orm_model extends Orm {
      * Retoune le nom de la resource
      * @return string
      */
-    protected function get_db() {
+    public function get_db() {
         return $this->_db;
     }
     
