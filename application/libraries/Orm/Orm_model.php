@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.10 (20141119)
+ * @version 3.2.11 (20141218)
  */
 class Orm_model extends Orm {
     
@@ -68,7 +68,7 @@ class Orm_model extends Orm {
         // Si la variable $data est un entier, c'est une clé primaire
         if (is_numeric($data)) {
             $this->_primary_key_find(new Orm_primary_key(static::$primary_key, $data));
-
+            
         // Si la variable $data est une instance de la classe Orm_association
         } else if ($data instanceof Orm_association) {
             $this->_association_find($data);
@@ -145,7 +145,7 @@ class Orm_model extends Orm {
      * Génère les variables dans le modèle
      * @return
      */
-    protected function _generate() {
+    protected function _generate() { 
         foreach (static::$fields as $field)
             $this->_data[$field['name']] = NULL;
     }
@@ -154,10 +154,10 @@ class Orm_model extends Orm {
      * Génère le select d'une requete SQL
      */
     private function _select() {
-        $output = array();
-
+        $this->_db->select('*');
+        
         foreach (static::$fields as $config) {
-
+            $output = array();
             $orm_field = new Orm_field($config);
 
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
@@ -170,14 +170,10 @@ class Orm_model extends Orm {
                     'field' => "TO_BASE64(`$orm_field->name`) AS `$orm_field->name`",
                     'quote' => FALSE
                 );
-            } else {
-                $output = array(
-                    'field' => $orm_field->name,
-                    'quote' => NULL
-                );
             }
             
-            $this->_db->select($output['field'], $output['quote']);
+            if ( ! empty($output)) 
+                $this->_db->select($output['field'], $output['quote']);
         }
     }
     
@@ -185,7 +181,7 @@ class Orm_model extends Orm {
      * Génère l'insert et l'update d'une requete SQL
      * @param array $data
      */
-    private function _set(array $data, $insert = TRUE) {
+    private function _set(array $data, $insert = TRUE) {        
         // Initialise le champ
         $input = array();
         
@@ -204,7 +200,7 @@ class Orm_model extends Orm {
 
             // Initialise l'objet champ
             $orm_field = new Orm_field($config, $value);
-            
+                        
             // Si c'est un champ qu'on doit crypter
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
                 $input = array(
@@ -242,7 +238,7 @@ class Orm_model extends Orm {
                     'quote' => TRUE
                 );
             }
-            
+                        
             // Si le champ doit être mis a jour
             if (in_array($name, $this->_update))
                 $this->_db->set($input['field'], $input['value'], $input['quote']);
@@ -250,7 +246,7 @@ class Orm_model extends Orm {
         
         // Si il y a des champs a modifier
         $has_values = ! empty($this->_update);
-
+        
         // Réinitialise les champs a mettre à jour
         $this->_update = array();
         
@@ -280,16 +276,16 @@ class Orm_model extends Orm {
     }
 
     /**
-     * Modifie la valeurd'un champ
+     * Modifie la valeur d'un champ
      * @param string $name
      * @param integer|string|float $value
      */
     public function __set($name, $value) {
         // Si le champ existe
-        if (isset($this->_data[$name])) {
+        if (array_key_exists($name, $this->_data)) {
             // Cast la valeur
             $this->_convert($name, $value);
-
+            
             // Ajoute le champ a mettre à jour
             $this->_update[] = $name;
         }
@@ -309,7 +305,7 @@ class Orm_model extends Orm {
 
         // Initialisation de l'objet association
         $orm_association = new Orm_association($config, $this);
-
+        
         // Retoune le nouveau modèle associé
         return $orm_association->associated();
     }
@@ -697,10 +693,14 @@ class Orm_model extends Orm {
         
         // Type de requête
         $has_insert = (empty($orm_primary_key->value) || $force_insert === TRUE) ? TRUE : FALSE;
-
+        
         // Mise a jour des champs, et retourne si il y a des champs a modifier
         $has_values = $this->_set($this->_data, $has_insert);
         
+        // Il y a aucun champ a mettre a jour
+        if ($has_values === FALSE)
+            return FALSE;
+                        
         // Si la requete est de type insert
         if ($has_insert) {
             // Exécute la requête
@@ -717,10 +717,6 @@ class Orm_model extends Orm {
             
          // Si la requete est de type update
         } else {
-            // Il y a aucun champ a mettre a jour
-            if ($has_values === FALSE)
-                return FALSE;
-            
             // Exécute la requête
             return $this->_db->from($orm_table->name)->where($orm_primary_key->name, $orm_primary_key->value)->update();
         }
