@@ -268,12 +268,9 @@ class Orm_model extends Orm {
     /**
      * Récupère la valeur d'un champ
      * @param type $name
-     * @return integer|string|float
+     * @return mixed
      */
     public function __get($name) {
-        if ( ! isset($this->_data[$name]))
-            return FALSE;
-
         return $this->_data[$name];
     }
 
