@@ -5,68 +5,80 @@ class Welcome extends CI_Controller {
     public function __construct() {
         parent::__construct();
     }
-
+    
     public function index() {
         // ---------- Chargement de la library
         $this->load->library('orm');
 
-        // ---------- Création d'un nouvelle object (INSERT)
+        // ---------- Exemple création d'un nouvelle object (INSERT)
         $model_user = new \dbd\user_model();
         $model_user->login = 'yoann';
         $model_user->save();
         
         var_dump($model_user);
         
-        // ---------- Modification de l'object id 1 (UPDATE)
-        $model_user = new \dbd\user_model(1);
-        $model_user->login = 'vanitou';
-        $model_user->save();
+        // ---------- Exemple modification de l'object id 100 (UPDATE)
+        $user = new \dbd\user_model(100);
+        $user->login = 'vanitou';
+        $user->save();
         
-        // ---------- Charge l'object id 1 (SELECT)
-        $model_user = new \dbd\user_model(1);
+        // ---------- Exemple charge l'object id 100 (SELECT)
+        $user = new \dbd\user_model(100);
         
-        var_dump($model_user);
+        var_dump($user);
         
         // Autre façon de faire
         $model_user = new \dbd\user_model();
-        $model_user = $model_user->where('id', 1)->find_one();
+        $user = $model_user->where('id', 100)->find_one();
         
         // Recherche avancé
         $model_user = new \dbd\user_model();
-        $model_user = $model_user->where('login', 'vanitou')->order_by('id', 'ASC')->find();
+        $users = $model_user->where('login', 'vanitou')->order_by('id', 'ASC')->find();
             
-        var_dump($model_user);
+        var_dump($users);
         
-        // ---------- Suppression de l'object id 1 (DELETE)
-        $model_user = new \dbd\user_model(1);
-        $model_user->remove();
+        // ---------- Exemple suppression de l'object id 1 (DELETE)
+        $user = new \dbd\user_model(100);
+        $user->remove();
         
-        // ---------- Les relations (JOINT)
-        $model_user = new \dbd\user_model(1);
+        // ---------- Exemple relation
+        $user = new \dbd\user_model(100);
         
         // Retourne un object "\dbd\user_group_model"
-        $model_user_group = $model_user->user_group()->find_one();
+        $user_group = $user->user_group()->find_one();
         
-        var_dump($model_user, $model_user_group);
+        var_dump($user, $user_group);
         
-        // ---------- La validation
-        $model_user = new \dbd\user_model(1);
-        $model_user->firstname = 'Yoann';
-        $model_user->lastname = 'Vanitou';
+        // ---------- Exemple validation
+        $user = new \dbd\user_model(100);
+        $user->firstname = 'Yoann';
+        $user->lastname = 'Vanitou';
         
         // Vérifie si l'object est valide
-        if ( ! $model_user->is_validate()) {
-            $errors = $model_user->validate();
+        if ( ! $user->is_validate()) {
+            $errors = $user->validate();
             
             // Retourne les champs invalide
             var_dump($errors);
             
         } else {
             // Si l'object est valide on le sauvegarde
-            $model_user->save();
+            $user->save();
         }
+                
+        // ---------- Exemple transactions automatique
+        $this->db_dbd->trans_start();
         
-
+        // Suppression de l'object id 1 (DELETE)
+        $user = new \dbd\user_model(100);
+        $user->firstname = 'Yoann';
+        $user->save();
+        
+        $this->db_dbd->trans_complete();
+        
+        // Status la transaction
+        var_dump($this->db->trans_status());
+        
         // Affiche les requêtes SQL
         $this->output->enable_profiler(TRUE);
     }
