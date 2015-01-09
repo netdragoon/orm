@@ -9,6 +9,8 @@ class Welcome extends CI_Controller {
     public function index() {
         // ---------- Chargement de la library
         $this->load->library('orm');
+        
+        // ------------------------------------------------------------------
 
         // ---------- Exemple création d'un nouvelle object (INSERT)
         $model_user = new \dbd\user_model();
@@ -17,10 +19,14 @@ class Welcome extends CI_Controller {
         
         var_dump($model_user);
         
+        // ------------------------------------------------------------------
+        
         // ---------- Exemple modification de l'object id 100 (UPDATE)
         $user = new \dbd\user_model(100);
         $user->login = 'vanitou';
         $user->save();
+        
+        // ------------------------------------------------------------------
         
         // ---------- Exemple charge l'object id 100 (SELECT)
         $user = new \dbd\user_model(100);
@@ -37,6 +43,8 @@ class Welcome extends CI_Controller {
             
         var_dump($users);
         
+        // ------------------------------------------------------------------
+        
         // ---------- Exemple suppression de l'object id 1 (DELETE)
         $user = new \dbd\user_model(100);
         $user->remove();
@@ -48,6 +56,8 @@ class Welcome extends CI_Controller {
         $user_group = $user->user_group()->find_one();
         
         var_dump($user, $user_group);
+        
+        // ------------------------------------------------------------------
         
         // ---------- Exemple validation
         $user = new \dbd\user_model(100);
@@ -65,6 +75,8 @@ class Welcome extends CI_Controller {
             // Si l'object est valide on le sauvegarde
             $user->save();
         }
+        
+        // ------------------------------------------------------------------
                 
         // ---------- Exemple transaction automatique
         $this->db_dbd->trans_start();
@@ -78,6 +90,8 @@ class Welcome extends CI_Controller {
         
         // Statut de la transaction
         var_dump($this->db->trans_status());
+        
+        // ------------------------------------------------------------------
         
         // ---------- Exemple transaction manuelle
         $this->db_dbd->trans_begin();
@@ -95,6 +109,8 @@ class Welcome extends CI_Controller {
             // Valide la transaction
             $this->db->trans_commit();
         }
+        
+        // ------------------------------------------------------------------
         
         // Affiche les requêtes SQL
         $this->output->enable_profiler(TRUE);
