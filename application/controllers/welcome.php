@@ -66,7 +66,7 @@ class Welcome extends CI_Controller {
             $user->save();
         }
                 
-        // ---------- Exemple transactions automatique
+        // ---------- Exemple transaction automatique
         $this->db_dbd->trans_start();
         
         // Suppression de l'object id 1 (DELETE)
@@ -76,8 +76,25 @@ class Welcome extends CI_Controller {
         
         $this->db_dbd->trans_complete();
         
-        // Status la transaction
+        // Statut de la transaction
         var_dump($this->db->trans_status());
+        
+        // ---------- Exemple transaction manuelle
+        $this->db_dbd->trans_begin();
+        
+        // Suppression de l'object id 1 (DELETE)
+        $user = new \dbd\user_model(100);
+        $user->firstname = 'Yoann';
+        $user->save();
+        
+        // Statut de la transaction
+        if ($this->db->trans_status() === FALSE) {
+            // Annule la transaction
+            $this->db->trans_rollback();
+        } else {
+            // Valide la transaction
+            $this->db->trans_commit();
+        }
         
         // Affiche les requêtes SQL
         $this->output->enable_profiler(TRUE);
