@@ -5,7 +5,7 @@
  * has_one      : un utilisateur n'a qu'une nationnalité (id_nationnalité dans users)
  * has_many     : un groupe a plusieurs membres
  * belongs_to   : plusieurs vidéos appartiennent à une utilisateur (id_user dans users_videos)
- * @version 3.2.11 (20141218)
+ * @version 3.2.12 (20150311)
  */
 class Modelgenerator extends CI_Controller {
 
@@ -253,6 +253,7 @@ class Modelgenerator extends CI_Controller {
 
 					$allow_null = false;
 					$encrypt = false;
+					$binary = false;
                     
 					if ($field['Null'] == 'YES')
 						$allow_null = true;
@@ -262,6 +263,9 @@ class Modelgenerator extends CI_Controller {
 						switch ($fieldAjout) {
 							case 'encrypt':
 								$encrypt = true;
+								break;
+                            case 'binary':
+								$binary = true;
 								break;
 						}
 					}
@@ -281,6 +285,9 @@ class Modelgenerator extends CI_Controller {
                     
                     if ($encrypt)
                         $fields_buffer .= ", 'encrypt' => true";
+                    
+                    if ($binary)
+                        $fields_buffer .= ", 'binary' => true";
                     
 					if ($field['Key'] == 'PRI')
 						$primary_keys .= "\r\n\t".'public static $primary_key = \''.$field['Field'].'\';'."\r\n";
