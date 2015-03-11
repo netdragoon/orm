@@ -1,4 +1,7 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
 /**
  * Willy & Case & Yoann
@@ -9,178 +12,178 @@
  */
 class Modelgenerator extends CI_Controller {
 
-	private $override = array();
-	private $association = array();
-	private $model_output = '';
+    private $override = array();
+    private $association = array();
+    private $model_output = '';
 
-	const STARTCODE2KEEP = "//--START_PERSISTANT_CODE";
-	const ENDCODE2KEEP = "//--END_PERSISTANT_CODE";
+    const STARTCODE2KEEP = "//--START_PERSISTANT_CODE";
+    const ENDCODE2KEEP = "//--END_PERSISTANT_CODE";
 
-	public function __construct() {
-        ini_set("memory_limit","-1");
+    public function __construct() {
+        ini_set("memory_limit", "-1");
         set_time_limit(0);
-        
-		parent::__construct();
-        
+
+        parent::__construct();
+
         $this->load->helper("text");
-	}
-    
+    }
+
     public function index() {
         $this->run();
     }
 
     private function _config() {
-		// Fichier de configuration des bases de données
-		$file_db_env = APPPATH.'config/'.ENVIRONMENT.'/database.php';
-		$file_db = APPPATH.'config/database.php';
-		$file_path = (file_exists($file_db_env)) ? $file_db_env : $file_db;
+        // Fichier de configuration des bases de données
+        $file_db_env = APPPATH.'config/'.ENVIRONMENT.'/database.php';
+        $file_db = APPPATH.'config/database.php';
+        $file_path = (file_exists($file_db_env)) ? $file_db_env : $file_db;
 
-		// Inclusion de la configuration
-		require($file_path);
+        // Inclusion de la configuration
+        require($file_path);
 
-		// Retourne la configuration
-		return $db;
-	}
+        // Retourne la configuration
+        return $db;
+    }
 
-	private function _dir($dir) {
-		if ( ! file_exists($dir)) {
-			if ( ! mkdir($dir, 0755)) {
-				return FALSE;
-			}
-		}
+    private function _dir($dir) {
+        if (!file_exists($dir)) {
+            if (!mkdir($dir, 0755)) {
+                return FALSE;
+            }
+        }
 
-		return TRUE;
-	}
+        return TRUE;
+    }
 
-	private function _save_override($dir) {
-		
-		echo '<pre>';
-		echo '<h1>CLEAN</h1>';
-		
-		foreach (glob($dir) as $file_path) {
-			if (is_file($file_path)) {
-				$file = basename($file_path);
-				$path = dirname($file_path);
-				$file_content = file_get_contents($file_path);
+    private function _save_override($dir) {
+
+        echo '<pre>';
+        echo '<h1>CLEAN</h1>';
+
+        foreach (glob($dir) as $file_path) {
+            if (is_file($file_path)) {
+                $file = basename($file_path);
+                $path = dirname($file_path);
+                $file_content = file_get_contents($file_path);
                 $override = '';
-				$particules = explode(self::STARTCODE2KEEP, $file_content);
-                
-				if ( ! empty($particules[1])) {                    
-					$particules = explode(self::ENDCODE2KEEP, $particules[1]);
-					$override = $particules[0];
-				}
-                
-				if ( ! empty($override)) {
-					$this->override[$file] = "\r\n\t".self::STARTCODE2KEEP.($override).self::ENDCODE2KEEP."\r\n";
-				}
+                $particules = explode(self::STARTCODE2KEEP, $file_content);
 
-				echo "Suppression du fichier <b>$file</b> du répertoire $path";
+                if (!empty($particules[1])) {
+                    $particules = explode(self::ENDCODE2KEEP, $particules[1]);
+                    $override = $particules[0];
+                }
 
-				if (unlink($file_path)) {
-					echo '<b style="color:green">OK</b><br />';
-				} else {
-					echo '<b style="color:red">KO</b><br />';
-				}
-			}
-		}
-	}
+                if (!empty($override)) {
+                    $this->override[$file] = "\r\n\t".self::STARTCODE2KEEP.($override).self::ENDCODE2KEEP."\r\n";
+                }
 
-	private function _association_many($namespace) {	
-		$relation_inverse = array(
-			"belongs_to" => "has_many",
-			"has_many" => "belongs_to",
-			"has_one" => "has_one"
-		);
-                
-        if ( ! $this->{"db_$namespace"}->initialize())
+                echo "Suppression du fichier <b>$file</b> du répertoire $path";
+
+                if (unlink($file_path)) {
+                    echo '<b style="color:green">OK</b><br />';
+                } else {
+                    echo '<b style="color:red">KO</b><br />';
+                }
+            }
+        }
+    }
+
+    private function _association_many($namespace) {
+        $relation_inverse = array(
+            "belongs_to" => "has_many",
+            "has_many" => "belongs_to",
+            "has_one" => "has_one"
+        );
+
+        if (!$this->{"db_$namespace"}->initialize())
             exit("Impossible de se connecté à la base <b>$namespace</b> (database.php).");
-        
-		$query_table = $this->{"db_$namespace"}->query("SHOW TABLE STATUS");
-		
-		foreach ($query_table->result_array() as $table) {
-			// création des relations (clés étrangères d'inno db préalablement définies en base)
-			$sql = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
+
+        $query_table = $this->{"db_$namespace"}->query("SHOW TABLE STATUS");
+
+        foreach ($query_table->result_array() as $table) {
+            // création des relations (clés étrangères d'inno db préalablement définies en base)
+            $sql = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
 									FROM information_schema.KEY_COLUMN_USAGE
 									WHERE CONSTRAINT_NAME != "PRIMARY"
 										AND  TABLE_NAME = "'.$table['Name'].'"';
 
-			$query_relations = $this->{"db_$namespace"}->query($sql);
+            $query_relations = $this->{"db_$namespace"}->query($sql);
 
-			if ($query_relations->num_rows() > 0) {
-				foreach ($query_relations->result_array() as $data) {
-					$referenced_table_name = $data["REFERENCED_TABLE_NAME"];
-					
-					 // le plus courant
-					$relation_type = "has_one";
-					
-					$query_field = $this->{"db_$namespace"}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
-					$relations_comments = array();
-					
-					if ($query_field->num_rows() > 0) {
-						foreach ($query_field->result_array() as $field) {
-							$relations_comments[$field['Field']] = $field['Comment'];
-						}
-					}
+            if ($query_relations->num_rows() > 0) {
+                foreach ($query_relations->result_array() as $data) {
+                    $referenced_table_name = $data["REFERENCED_TABLE_NAME"];
 
-					if ( ! empty($relations_comments[$data["COLUMN_NAME"]])) {
-						$relation_type = $relations_comments[$data["COLUMN_NAME"]];
+                    // le plus courant
+                    $relation_type = "has_one";
 
-						if ($relation_type != "has_one" && $relation_type != "has_many" && $relation_type != "belongs_to") {
-							$relation_type = "";
-						}
-					}
+                    $query_field = $this->{"db_$namespace"}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
+                    $relations_comments = array();
 
-					if ($relation_type != "" && strtolower($relation_type) != "has_one" && empty($already_seen[$referenced_table_name][$table['Name']])) {
-						$already_seen[$referenced_table_name][$table['Name']] = TRUE;
+                    if ($query_field->num_rows() > 0) {
+                        foreach ($query_field->result_array() as $field) {
+                            $relations_comments[$field['Field']] = $field['Comment'];
+                        }
+                    }
 
-						// STOCKAGE DES RELATION INVERSES						
-						$referenced_table_name_t = strtolower($table['Name']);
-						$this->association[$referenced_table_name]['php'][] = "\t\tarray('association_key' => '$referenced_table_name_t', 'model' => '{$table['Name']}_model', 'type' => '{$relation_inverse[$relation_type]}', 'primary_key' => 'id', 'foreign_key' => '{$data["COLUMN_NAME"]}'),\r\n";
-						$this->association[$referenced_table_name]['javadoc'][] = "\t * @method {$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
-					}
-				}
-			}
-		}
-		
-		echo '<hr />';
-	}
-	
-	private function _create_model($namespace) {		
-		$relations_comments = array();
-		
-		echo '<h1>GENERATION</h1>';
+                    if (!empty($relations_comments[$data["COLUMN_NAME"]])) {
+                        $relation_type = $relations_comments[$data["COLUMN_NAME"]];
 
-		$query_table = $this->{"db_$namespace"}->query("SHOW TABLE STATUS");
-		
-		foreach ($query_table->result_array() as $table) {
-			$this->model_output = '';
+                        if ($relation_type != "has_one" && $relation_type != "has_many" && $relation_type != "belongs_to") {
+                            $relation_type = "";
+                        }
+                    }
 
-			$this->_append("<?php\r\n");
-			$this->_append("namespace $namespace;\r\n");
-			$this->_append("\r\n");
-			$this->_append("if ( ! defined('BASEPATH')) exit('No direct script access allowed');\r\n");
-			$this->_append("\r\n");
-			$this->_append("class {$table['Name']}_model extends \Orm_model {\r\n");
+                    if ($relation_type != "" && strtolower($relation_type) != "has_one" && empty($already_seen[$referenced_table_name][$table['Name']])) {
+                        $already_seen[$referenced_table_name][$table['Name']] = TRUE;
 
-			// GESTION DES CONSTANTES
+                        // STOCKAGE DES RELATION INVERSES						
+                        $referenced_table_name_t = strtolower($table['Name']);
+                        $this->association[$referenced_table_name]['php'][] = "\t\tarray('association_key' => '$referenced_table_name_t', 'model' => '{$table['Name']}_model', 'type' => '{$relation_inverse[$relation_type]}', 'primary_key' => 'id', 'foreign_key' => '{$data["COLUMN_NAME"]}'),\r\n";
+                        $this->association[$referenced_table_name]['javadoc'][] = "\t * @method {$referenced_table_name_t}_model $referenced_table_name_t() {$relation_inverse[$relation_type]}\r\n";
+                    }
+                }
+            }
+        }
+
+        echo '<hr />';
+    }
+
+    private function _create_model($namespace) {
+        $relations_comments = array();
+
+        echo '<h1>GENERATION</h1>';
+
+        $query_table = $this->{"db_$namespace"}->query("SHOW TABLE STATUS");
+
+        foreach ($query_table->result_array() as $table) {
+            $this->model_output = '';
+
+            $this->_append("<?php\r\n");
+            $this->_append("namespace $namespace;\r\n");
+            $this->_append("\r\n");
+            $this->_append("if ( ! defined('BASEPATH')) exit('No direct script access allowed');\r\n");
+            $this->_append("\r\n");
+            $this->_append("class {$table['Name']}_model extends \Orm_model {\r\n");
+
+            // GESTION DES CONSTANTES
             // on regarde si dans la table il y a la colonne constant
             $constants = array();
-            
+
             $query_columns = $this->{"db_$namespace"}->query("SHOW COLUMNS FROM `{$table['Name']}`");
-            
+
             foreach ($query_columns->result_array() as $column) {
                 if ($column['Field'] === "constant") {
-                    
+
                     $query_constant = $this->{"db_$namespace"}->query("SELECT `id`, `constant` FROM `{$table['Name']}` WHERE `constant` IS NOT NULL;");
-                  
+
                     foreach ($query_constant->result_array() as $val) {
-                       
+
                         foreach ($val as $k => $v) {
-                            if ($k === 'constant' && ! empty($v)) {
+                            if ($k === 'constant' && !empty($v)) {
 
                                 $constant = $this->_strtoconstante($v);
 
-                                if ( ! in_array($constant, $constants)) {
+                                if (!in_array($constant, $constants)) {
                                     $constants[] = $constant;
                                 } else {
                                     die('<b style="color:red">ATTENTION : Vous avez deux fois la même constante '.$constant.' dans la table '.$table['Name'].'</b><br />');
@@ -189,264 +192,264 @@ class Modelgenerator extends CI_Controller {
                                 $this->_append("\tconst $constant = {$val['id']};\r\n");
                             }
                         }
-                    }    
+                    }
                 }
             }
-            
+
             $this->_append("\r\n");
             $this->_append("\tpublic static \$table = '{$table['Name']}';\r\n");
-			$this->_append("\r\n");
+            $this->_append("\r\n");
 
-			$query_field = $this->{"db_$namespace"}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
+            $query_field = $this->{"db_$namespace"}->query('SHOW FULL COLUMNS FROM `'.$table['Name'].'`');
 
-			if ($query_field->num_rows() > 0) {
+            if ($query_field->num_rows() > 0) {
 
-				$primary_keys = "";
+                $primary_keys = "";
 
-				$foreign_keys = "\tpublic static \$foreign_key = array(\r\n";
-				$flag_foreign_keys = false;
+                $foreign_keys = "\tpublic static \$foreign_key = array(\r\n";
+                $flag_foreign_keys = false;
 
-				$fields_javadoc_buffer = "\t/**\r\n";
-				$fields_buffer = "\tpublic static \$fields = array(\r\n";
-                
+                $fields_javadoc_buffer = "\t/**\r\n";
+                $fields_buffer = "\tpublic static \$fields = array(\r\n";
+
                 $type = array();
 
-				foreach ($query_field->result_array() as $field) {
-                    if( strpos( $field['Type'], "(") !== FALSE ) {
-                        $type = explode('(', $field['Type']);       
+                foreach ($query_field->result_array() as $field) {
+                    if (strpos($field['Type'], "(") !== FALSE) {
+                        $type = explode('(', $field['Type']);
                     } else {
-                        $type[0] = $field['Type'];                                         
+                        $type[0] = $field['Type'];
                     }
-                    
+
                     $type_date = NULL;
-                    
-					switch ($type[0]) {
-						case 'bigint':
-						case 'mediumint':
-						case 'tinyint':
-						case 'smallint':
-						case 'int':
-							$type[0] = 'int';
-							break;
-						case 'float':
-						case 'double':
-							$type[0] = 'float';
-							break;
-						case 'date':
+
+                    switch ($type[0]) {
+                        case 'bigint':
+                        case 'mediumint':
+                        case 'tinyint':
+                        case 'smallint':
+                        case 'int':
+                            $type[0] = 'int';
+                            break;
+                        case 'float':
+                        case 'double':
+                            $type[0] = 'float';
+                            break;
+                        case 'date':
                             $type_date = 'Y-m-d';
                             $type[0] = 'date';
                             break;
-						case 'datetime':
+                        case 'datetime':
                         case 'timestamp':
                             $type_date = 'Y-m-d H:i:s';
                             $type[0] = 'date';
                             break;
-						default:
-							$type[0] = 'string';
-							break;
-					}
-					// on stocke les commentaires (notamment pour les clés étrangères
-					$relations_comments[$field['Field']] = $field['Comment'];
+                        default:
+                            $type[0] = 'string';
+                            break;
+                    }
+                    // on stocke les commentaires (notamment pour les clés étrangères
+                    $relations_comments[$field['Field']] = $field['Comment'];
 
-					//Gestion des description des champs dans le commentaire de celui ci
-					//Exemple encrypt ou has_one pour les relations
+                    //Gestion des description des champs dans le commentaire de celui ci
+                    //Exemple encrypt ou has_one pour les relations
 
-					$allow_null = false;
-					$encrypt = false;
-					$binary = false;
-                    
-					if ($field['Null'] == 'YES')
-						$allow_null = true;
+                    $allow_null = false;
+                    $encrypt = false;
+                    $binary = false;
 
-					$tabField = explode('|', $field['Comment']);
-					foreach ($tabField as $fieldAjout) {
-						switch ($fieldAjout) {
-							case 'encrypt':
-								$encrypt = true;
-								break;
+                    if ($field['Null'] == 'YES')
+                        $allow_null = true;
+
+                    $tabField = explode('|', $field['Comment']);
+                    foreach ($tabField as $fieldAjout) {
+                        switch ($fieldAjout) {
+                            case 'encrypt':
+                                $encrypt = true;
+                                break;
                             case 'binary':
-								$binary = true;
-								break;
-						}
-					}
-                    
+                                $binary = true;
+                                break;
+                        }
+                    }
+
                     $fields_buffer .= "\t\tarray(";
 
-					$fields_javadoc_type = ($type[0] === "int") ? "integer" : $type[0];
-					$fields_javadoc_buffer .= "\t * @property $fields_javadoc_type \${$field['Field']}\r\n";
-                    
-					$fields_buffer .= "'name' => '{$field['Field']}', 'type' => '{$type[0]}'";
-                    
-                    if ( ! empty($type_date))
+                    $fields_javadoc_type = ($type[0] === "int") ? "integer" : $type[0];
+                    $fields_javadoc_buffer .= "\t * @property $fields_javadoc_type \${$field['Field']}\r\n";
+
+                    $fields_buffer .= "'name' => '{$field['Field']}', 'type' => '{$type[0]}'";
+
+                    if (!empty($type_date))
                         $fields_buffer .= ", 'date_format' => '$type_date'";
-                    
+
                     if ($allow_null)
                         $fields_buffer .= ", 'allow_null' => true";
-                    
+
                     if ($encrypt)
                         $fields_buffer .= ", 'encrypt' => true";
-                    
+
                     if ($binary)
                         $fields_buffer .= ", 'binary' => true";
-                    
-					if ($field['Key'] == 'PRI')
-						$primary_keys .= "\r\n\t".'public static $primary_key = \''.$field['Field'].'\';'."\r\n";
-                    
-					if ($field['Key'] == 'MUL') {
-						$foreign_keys .= "\t\t".'"'.$field['Field'].'"'.",\r\n";
-						$flag_foreign_keys = true;
-					}
-                    
+
+                    if ($field['Key'] == 'PRI')
+                        $primary_keys .= "\r\n\t".'public static $primary_key = \''.$field['Field'].'\';'."\r\n";
+
+                    if ($field['Key'] == 'MUL') {
+                        $foreign_keys .= "\t\t".'"'.$field['Field'].'"'.",\r\n";
+                        $flag_foreign_keys = true;
+                    }
+
                     $fields_buffer .= "),\r\n";
-				}
-                
-				$fields_javadoc_buffer .= "\t */\r\n";
+                }
 
-				$this->_append($fields_javadoc_buffer);
+                $fields_javadoc_buffer .= "\t */\r\n";
 
-				$fields_buffer .= "\t);\r\n";
-				$fields_buffer = str_replace(",\r\n\t);", "\r\n\t);", $fields_buffer);
+                $this->_append($fields_javadoc_buffer);
 
-				$this->_append($fields_buffer);
+                $fields_buffer .= "\t);\r\n";
+                $fields_buffer = str_replace(",\r\n\t);", "\r\n\t);", $fields_buffer);
 
-				if ($flag_foreign_keys) {
-					$foreign_keys.="end";
-					$foreign_keys = str_replace(",\r\nend", "", $foreign_keys);
-				}
-				$foreign_keys.="\r\n\t);\r\n";
-				$this->_append($primary_keys);
-			}
+                $this->_append($fields_buffer);
 
-			$this->_append("\r\n");
+                if ($flag_foreign_keys) {
+                    $foreign_keys.="end";
+                    $foreign_keys = str_replace(",\r\nend", "", $foreign_keys);
+                }
+                $foreign_keys.="\r\n\t);\r\n";
+                $this->_append($primary_keys);
+            }
 
-			/* ---------------------------------------- */
-			/*    ECRITURE DES RELATIONS                */
-			/* ---------------------------------------- */
-			// création des relations (clés étrangères d'inno db préalablement définies en base)
-			$sql_foreign_keys = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
+            $this->_append("\r\n");
+
+            /* ---------------------------------------- */
+            /*    ECRITURE DES RELATIONS                */
+            /* ---------------------------------------- */
+            // création des relations (clés étrangères d'inno db préalablement définies en base)
+            $sql_foreign_keys = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
                                     FROM information_schema.KEY_COLUMN_USAGE
                                     WHERE CONSTRAINT_NAME != "PRIMARY"
                                         AND  TABLE_NAME = "'.$table['Name'].'"';
-			$query_relations = $this->{"db_$namespace"}->query($sql_foreign_keys);
-			$asso = false;
-						
-			if ($query_relations->num_rows() > 0 || (isset($this->association[$table['Name']]) && count($this->association[$table['Name']])) > 0) {
-				$asso = true;
+            $query_relations = $this->{"db_$namespace"}->query($sql_foreign_keys);
+            $asso = false;
 
-				$relations_javadoc_buffer = "\t/**\r\n";
-				$relations_buffer = "\tpublic static \$associations = array(\r\n";
-				// écriture relation inverses
-				if (isset($this->association[$table['Name']])) {
-					foreach ($this->association[$table['Name']]['php'] as $rel) {
-						$relations_buffer .= $rel;
-					}
+            if ($query_relations->num_rows() > 0 || (isset($this->association[$table['Name']]) && count($this->association[$table['Name']])) > 0) {
+                $asso = true;
 
-					foreach ($this->association[$table['Name']]['javadoc'] as $rel_j) {
-						$relations_javadoc_buffer .= $rel_j;
-					}
-				}
+                $relations_javadoc_buffer = "\t/**\r\n";
+                $relations_buffer = "\tpublic static \$associations = array(\r\n";
+                // écriture relation inverses
+                if (isset($this->association[$table['Name']])) {
+                    foreach ($this->association[$table['Name']]['php'] as $rel) {
+                        $relations_buffer .= $rel;
+                    }
 
-				foreach ($query_relations->result_array() as $data) {
+                    foreach ($this->association[$table['Name']]['javadoc'] as $rel_j) {
+                        $relations_javadoc_buffer .= $rel_j;
+                    }
+                }
 
-					$relation_name = str_replace("_id", "", $data["COLUMN_NAME"]);
-					$referenced_table_name = $data["REFERENCED_TABLE_NAME"];
-					$referenced_column_name = $data["REFERENCED_COLUMN_NAME"];
-					$column_name = $data["COLUMN_NAME"];
-					$relation_type = 'has_one'; // le plus courant
+                foreach ($query_relations->result_array() as $data) {
 
-					if (!empty($relations_comments[$data["COLUMN_NAME"]])) {
-						$relation_type = $relations_comments[$data["COLUMN_NAME"]];
+                    $relation_name = str_replace("_id", "", $data["COLUMN_NAME"]);
+                    $referenced_table_name = $data["REFERENCED_TABLE_NAME"];
+                    $referenced_column_name = $data["REFERENCED_COLUMN_NAME"];
+                    $column_name = $data["COLUMN_NAME"];
+                    $relation_type = 'has_one'; // le plus courant
 
-						// sécurité
-						if ($relation_type != 'has_one' && $relation_type != 'has_many' && $relation_type != 'belongs_to') {
-							$relation_type = '';
-						}
-					}
+                    if (!empty($relations_comments[$data["COLUMN_NAME"]])) {
+                        $relation_type = $relations_comments[$data["COLUMN_NAME"]];
 
-					if ( ! empty($relation_type) &&  ! empty($referenced_table_name)) {
-						$relations_javadoc_buffer .= "\t * @method {$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
+                        // sécurité
+                        if ($relation_type != 'has_one' && $relation_type != 'has_many' && $relation_type != 'belongs_to') {
+                            $relation_type = '';
+                        }
+                    }
+
+                    if (!empty($relation_type) && !empty($referenced_table_name)) {
+                        $relations_javadoc_buffer .= "\t * @method {$referenced_table_name}_model $referenced_table_name() $relation_type\r\n";
                         $relations_buffer .= "\t\tarray('association_key' => '$referenced_table_name', 'model' => '{$referenced_table_name}_model', 'type' => '$relation_type', 'primary_key' => '$referenced_column_name', 'foreign_key' => '$column_name'),\r\n";
-					}
-				}
+                    }
+                }
 
-				$relations_buffer .= "\t);\r\n";
-				$relations_buffer = str_replace(",\r\n\t);", "\r\n\t);", $relations_buffer);
+                $relations_buffer .= "\t);\r\n";
+                $relations_buffer = str_replace(",\r\n\t);", "\r\n\t);", $relations_buffer);
 
-				$relations_javadoc_buffer .= "\t */\r\n";
-				
-				$this->_append($relations_javadoc_buffer);
-				$this->_append($relations_buffer);
-			}
-			
-			$filename = $table['Name'].'_model.php';
-            			
-			// Si il exite un override
-			if ( ! empty($this->override[$filename])) {
-				$this->_append($this->override[$filename]);
-			}
-			
-			$this->_append('}'."\r\n");
-			$this->_append("\r\n");
-            
+                $relations_javadoc_buffer .= "\t */\r\n";
+
+                $this->_append($relations_javadoc_buffer);
+                $this->_append($relations_buffer);
+            }
+
+            $filename = $table['Name'].'_model.php';
+
+            // Si il exite un override
+            if (!empty($this->override[$filename])) {
+                $this->_append($this->override[$filename]);
+            }
+
+            $this->_append('}'."\r\n");
+            $this->_append("\r\n");
+
             $file_path = FCPATH.APPPATH.'models/'.$namespace.'/'.$filename;
-			
-			if (touch($file_path)) {
+
+            if (touch($file_path)) {
                 file_put_contents($file_path, $this->model_output);
                 chmod($file_path, 0644);
-                
+
                 echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:green">OK</b><br />';
-                
             } else {
                 echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:red">KO</b><br />';
             }
-		}
-		
-		$this->association = array();
-		$this->override = array();
+        }
 
-		echo '<hr />';
-		echo '<h2>DONE ;)</h2>';
-	}
+        $this->association = array();
+        $this->override = array();
 
-	public function run() {
-		$config = $this->_config();
+        echo '<hr />';
+        echo '<h2>DONE ;)</h2>';
+    }
 
-		foreach ($config as $namespace => $db) {
-			// Création du répertoire
-			$this->_dir(APPPATH.'models/'.$namespace);
+    public function run() {
+        $config = $this->_config();
 
-			// Récupère les données des anciens modèles
-			$this->_save_override(APPPATH.'models/'.$namespace.'/*');
+        foreach ($config as $namespace => $db) {
+            // Création du répertoire
+            $this->_dir(APPPATH.'models/'.$namespace);
 
-			// Stock la nouvelle connexion à la base de donnée
-			$this->{"db_$namespace"} = $this->load->database($namespace, TRUE);
-			
-			// Stock les association many
-			$this->_association_many($namespace);
-			
-			// Création des modèles
-			$this->_create_model($namespace);
-            
+            // Récupère les données des anciens modèles
+            $this->_save_override(APPPATH.'models/'.$namespace.'/*');
+
+            // Stock la nouvelle connexion à la base de donnée
+            $this->{"db_$namespace"} = $this->load->database($namespace, TRUE);
+
+            // Stock les association many
+            $this->_association_many($namespace);
+
+            // Création des modèles
+            $this->_create_model($namespace);
+
             // Profiler
             $this->output->enable_profiler(TRUE);
-		}
-	}
+        }
+    }
 
-	private function _append($output) {
-		$this->model_output .= $output;
-	}
-    
-    private function _strtoconstante($chaine) { 
-        $chaine = trim($chaine); 
+    private function _append($output) {
+        $this->model_output .= $output;
+    }
+
+    private function _strtoconstante($chaine) {
+        $chaine = trim($chaine);
         $chaine = convert_accented_characters($chaine);
-        $chaine = preg_replace('#([^.a-z0-9]+)#i', '_', $chaine); 
-        $chaine = preg_replace('#-#','_',$chaine);
-        $chaine = preg_replace('#_{2,}#','_',$chaine);
-        $chaine = preg_replace('#_$#','',$chaine);
-        $chaine = preg_replace('#^_#','',$chaine);
-        
+        $chaine = preg_replace('#([^.a-z0-9]+)#i', '_', $chaine);
+        $chaine = preg_replace('#-#', '_', $chaine);
+        $chaine = preg_replace('#_{2,}#', '_', $chaine);
+        $chaine = preg_replace('#_$#', '', $chaine);
+        $chaine = preg_replace('#^_#', '', $chaine);
+
         return strtoupper($chaine);
     }
+
 }
 
 /* End of file modelgenerator.php */
