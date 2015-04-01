@@ -414,6 +414,8 @@ class Modelgenerator extends CI_Controller {
         $config = $this->_config();
 
         foreach ($config as $namespace => $db) {
+            echo "<h1>Base de donnée <strong>$namespace</strong></h1><br />";
+            
             // Création du répertoire
             $this->_dir(APPPATH.'models/'.$namespace);
 
