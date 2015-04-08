@@ -448,6 +448,7 @@ class Modelgenerator extends CI_Controller {
         $chaine = preg_replace('#_{2,}#', '_', $chaine);
         $chaine = preg_replace('#_$#', '', $chaine);
         $chaine = preg_replace('#^_#', '', $chaine);
+        $chaine = preg_replace('#\.#', '', $chaine);
 
         return strtoupper($chaine);
     }
