@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.11 (20141218)
+ * @version 3.2.12 (20150428)
  */
 class Orm_validation extends Orm {
 

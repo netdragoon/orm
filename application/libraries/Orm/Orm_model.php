@@ -5,7 +5,7 @@
  * @author Yoann VANITOU
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.11 (20141218)
+ * @version 3.2.12 (20150428)
  */
 class Orm_model extends Orm {
     
@@ -402,7 +402,7 @@ class Orm_model extends Orm {
         
         return $fields;
     }
-    
+        
     /**
      * Génère un WHERE en SQL
      * @param mixe $key
@@ -411,9 +411,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where($key, $value = NULL, $escape = TRUE) {
-        $this->_db->where($key, $value, $escape);
-
-        return $this;
+        return $this->_db->where($key, $value, $escape);
     }
     
     /**
@@ -424,9 +422,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_where($key, $value = NULL, $escape = TRUE) {
-        $this->_db->or_where($key, $value, $escape);
-
-        return $this;
+        return $this->_db->or_where($key, $value, $escape);
     }
 
     /**
@@ -437,9 +433,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where_in($key = NULL, $values = NULL) {
-        $this->_db->where_in($key, $values);
-
-        return $this;
+        return $this->_db->where_in($key, $values);
     }
     
     /**
@@ -450,9 +444,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where_not_in($key = NULL, $values = NULL) {
-        $this->_db->where_not_in($key, $values);
-
-        return $this;
+        return $this->_db->where_not_in($key, $values);
     }
     
     /**
@@ -463,9 +455,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_where_not_in($key = NULL, $values = NULL) {
-        $this->_db->or_where_not_in($key, $values);
-
-        return $this;
+        return $this->_db->or_where_not_in($key, $values);
     }
 
     /**
@@ -476,9 +466,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function like($field, $match = '', $side = 'both') {
-        $this->_db->like($field, $match, $side);
-
-        return $this;
+        return $this->_db->like($field, $match, $side);
     }
     
     /**
@@ -489,9 +477,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_like($field, $match = '', $side = 'both') {
-        $this->_db->or_like($field, $match, $side);
-
-        return $this;
+        return $this->_db->or_like($field, $match, $side);
     }
     
     /**
@@ -502,9 +488,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function not_like($field, $match = '', $side = 'both') {
-        $this->_db->or_like($field, $match, $side);
-
-        return $this;
+        return $this->_db->or_like($field, $match, $side);
     }
     
     /**
@@ -515,9 +499,16 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_not_like($field, $match = '', $side = 'both') {
-        $this->_db->or_not_like($field, $match, $side);
-
-        return $this;
+        return $this->_db->or_not_like($field, $match, $side);
+    }
+    
+    /**
+     * Génère un WHERE personnalisé en SQL
+     * @param mixe $sql
+     * @return Orm_model
+     */
+    public function sql($sql) {
+        return $this->_db->where($sql, NULL, FALSE);
     }
 
     /**
@@ -526,9 +517,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function group_by($by) {
-        $this->_db->group_by($by);
-
-        return $this;
+        return $this->_db->group_by($by);
     }
 
     /**
@@ -539,9 +528,18 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function having($key, $value = '', $escape = TRUE) {
-        $this->_db->having($key, $value, $escape);
-
-        return $this;
+        return $this->_db->having($key, $value, $escape);
+    }
+    
+    /**
+     * Génère un OR HAVING en SQL
+     * @param string $key
+     * @param string $value
+     * @param boolean $escape
+     * @return Orm_model
+     */
+    public function or_having($key, $value = '', $escape = TRUE) {
+        return $this->_db->or_having($key, $value, $escape);
     }
 
     /**
@@ -551,9 +549,7 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function order_by($orderby, $direction = '') {
-        $this->_db->order_by($orderby, $direction);
-
-        return $this;
+        return $this->_db->order_by($orderby, $direction);
     }
 
     /**
@@ -563,9 +559,16 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function limit($value, $offset = '') {
-        $this->_db->limit($value, $offset);
-
-        return $this;
+        return $this->_db->limit($value, $offset);
+    }
+    
+    /**
+     * Génère un OFFSET en SQL
+     * @param string $offset
+     * @return Orm_model
+     */
+    public function offset($offset) {
+        return $this->_db->offset($offset);
     }
 
     /**
