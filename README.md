@@ -1,6 +1,41 @@
 # sag-orm
 object-relational mapping for Codeigniter
 
+## Installation
+### Step 1
+Copy file /controllers/modelgenerator.php > /application/controllers/modelgenerator.php:
+Copy file /language/english/orm_lang.php > /application/language/english/orm_lang.php:
+Copy file /helpers/orm_helper.php > /application/helpers/orm_helper.php:
+
+### Step 2
+Configuration /application/config/database.php
+
+```php
+$db['databasename']['hostname'] = 'localhost';
+$db['databasename']['username'] = '';
+$db['databasename']['password'] = '';
+$db['databasename']['database'] = '';
+$db['databasename']['databaseriver'] = 'mysql';
+$db['databasename']['dbprefix'] = '';
+$db['databasename']['pconnect'] = TRUE;
+$db['databasename']['db_debug'] = TRUE;
+$db['databasename']['cache_on'] = FALSE;
+$db['databasename']['cachedir'] = '';
+$db['databasename']['char_set'] = 'utf8';
+$db['databasename']['dbcollat'] = 'utf8_general_ci';
+$db['databasename']['swap_pre'] = '';
+$db['databasename']['autoinit'] = TRUE;
+$db['databasename']['stricton'] = FALSE;
+```
+
+### Step 3
+#### CLI
+```bash
+php index.php modelgenerator index
+```
+#### WEB
+http://site/index.php?/modelgenerator/index
+
 ## Config
 /application/config/orm.php:
 ```php
@@ -25,12 +60,12 @@ class Welcome extends CI_Controller {
     
     public function index() {
         // ---------- Chargement de la library
-        $this->load->library('orm');
+        $this->load->library('Orm/orm');
         
         // ------------------------------------------------------------------
 
         // ---------- Exemple création d'un nouvelle object (INSERT)
-        $model_user = new \dbd\user_model();
+        $model_user = new \databasename\user_model();
         $model_user->login = 'yoann';
         $model_user->save();
         
@@ -39,23 +74,23 @@ class Welcome extends CI_Controller {
         // ------------------------------------------------------------------
         
         // ---------- Exemple modification de l'object id 100 (UPDATE)
-        $user = new \dbd\user_model(100);
+        $user = new \databasename\user_model(100);
         $user->login = 'vanitou';
         $user->save();
         
         // ------------------------------------------------------------------
         
         // ---------- Exemple charge l'object id 100 (SELECT)
-        $user = new \dbd\user_model(100);
+        $user = new \databasename\user_model(100);
         
         var_dump($user);
         
         // Autre façon de faire
-        $model_user = new \dbd\user_model();
+        $model_user = new \databasename\user_model();
         $user = $model_user->where('id', 100)->find_one();
         
         // Recherche avancé
-        $model_user = new \dbd\user_model();
+        $model_user = new \databasename\user_model();
         $users = $model_user->where('login', 'vanitou')->order_by('id', 'ASC')->find();
             
         var_dump($users);
@@ -63,13 +98,13 @@ class Welcome extends CI_Controller {
         // ------------------------------------------------------------------
         
         // ---------- Exemple suppression de l'object id 100 (DELETE)
-        $user = new \dbd\user_model(100);
+        $user = new \databasename\user_model(100);
         $user->remove();
         
         // ---------- Exemple relation
-        $user = new \dbd\user_model(100);
+        $user = new \databasename\user_model(100);
         
-        // Retourne un object "\dbd\user_group_model"
+        // Retourne un object "\databasename\user_group_model"
         $user_group = $user->user_group()->find_one();
         
         var_dump($user, $user_group);
@@ -77,7 +112,7 @@ class Welcome extends CI_Controller {
         // ------------------------------------------------------------------
         
         // ---------- Exemple validation
-        $user = new \dbd\user_model(100);
+        $user = new \databasename\user_model(100);
         $user->firstname = 'Yoann';
         $user->lastname = 'Vanitou';
         
@@ -96,14 +131,14 @@ class Welcome extends CI_Controller {
         // ------------------------------------------------------------------
                 
         // ---------- Exemple transaction automatique
-        $this->db_dbd->trans_start();
+        $this->db_databasename->trans_start();
         
         // Mise à jour de l'object id 100 (UPDATE)
-        $user = new \dbd\user_model(100);
+        $user = new \databasename\user_model(100);
         $user->firstname = 'Yoann';
         $user->save();
         
-        $this->db_dbd->trans_complete();
+        $this->db_databasename->trans_complete();
         
         // Statut de la transaction
         var_dump($this->db->trans_status());
