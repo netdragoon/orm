@@ -3,11 +3,13 @@ object-relational mapping for Codeigniter
 
 ## Installation
 ### Step 1
+```txt
 Copy file /controllers/modelgenerator.php > /application/controllers/modelgenerator.php:
 Copy file /language/english/orm_lang.php > /application/language/english/orm_lang.php:
 Copy file /helpers/orm_helper.php > /application/helpers/orm_helper.php:
+```
 
-### Step 2
+### Step 2 Configuration database
 Configuration /application/config/database.php
 
 ```php
@@ -28,15 +30,17 @@ $db['databasename']['autoinit'] = TRUE;
 $db['databasename']['stricton'] = FALSE;
 ```
 
-### Step 3
-#### CLI
+### Step 3 Model Generator
+#### Method CLI
 ```bash
 php index.php modelgenerator index
 ```
-#### WEB
+OR
+
+#### Method WEB
 http://site/index.php?/modelgenerator/index
 
-## Config
+## Config ORM
 /application/config/orm.php:
 ```php
 $config['orm'] = array(
