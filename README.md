@@ -27,6 +27,12 @@ Object Relational Mapping for Codeigniter 2 and Codeigniter 3
 ```php
 <?php require(APPPATH.'/libraries/Orm/language/english/orm_lang.php');
 ```
+```txt
+/application/libraries/Orm.php
+```
+```php
+<?php require(__DIR__.'/Orm/Orm.php');
+```
 
 ### Step 3 Configuration database
 Configuration /application/config/database.php
