@@ -13,8 +13,7 @@
  */
 function orm_autoload($class) {
 	if (strstr($class, '_model') !== FALSE) {
-        $path = (version_compare(CI_VERSION, '3.0.0') >= 0) ? APPPATH : FCPATH.APPPATH;
-		$file_path = str_replace('\\', '/', $path.'models/'.$class.'.php');
+		$file_path = str_replace('\\', '/', APPPATH.'models/'.$class.'.php');
                 
 		if (is_file($file_path))
 			include_once($file_path);

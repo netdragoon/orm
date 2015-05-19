@@ -13,7 +13,6 @@ class Modelgenerator extends CI_Controller {
     private $override = array();
     private $association = array();
     private $model_output = '';
-    private $app_path = '';
 
     const STARTCODE2KEEP = "//--START_PERSISTANT_CODE";
     const ENDCODE2KEEP = "//--END_PERSISTANT_CODE";
@@ -44,13 +43,10 @@ class Modelgenerator extends CI_Controller {
      * Configuration
      * @return array $db
      */
-    private function _config() {
-        // Chemin de l'application
-        $this->app_path = (version_compare(CI_VERSION, '3.0.0') >= 0) ? APPPATH : FCPATH.APPPATH;
-        
+    private function _config() {        
         // Fichier de configuration des bases de données
-        $file_db_env = $this->app_path.'config/'.ENVIRONMENT.'/database.php';
-        $file_db = $this->app_path.'config/database.php';
+        $file_db_env = APPPATH.'config/'.ENVIRONMENT.'/database.php';
+        $file_db = APPPATH.'config/database.php';
         $file_path = (file_exists($file_db_env)) ? $file_db_env : $file_db;
 
         // Inclusion de la configuration
@@ -423,7 +419,7 @@ class Modelgenerator extends CI_Controller {
             $this->_append('}'."\r\n");
             $this->_append("\r\n");
                
-            $file_path = $this->app_path.'models/'.$namespace.'/'.$file_name;
+            $file_path = APPPATH.'models/'.$namespace.'/'.$file_name;
             
             if (touch($file_path)) {
                 file_put_contents($file_path, $this->model_output);
@@ -452,10 +448,10 @@ class Modelgenerator extends CI_Controller {
             echo "<h1>Base de donnée <strong>$namespace</strong></h1><br />";
             
             // Création du répertoire
-            $this->_dir($this->app_path.'models/'.$namespace);
+            $this->_dir(APPPATH.'models/'.$namespace);
 
             // Récupère les données des anciens modèles
-            $this->_save_override($this->app_path.'models/'.$namespace.'/*');
+            $this->_save_override(APPPATH.'models/'.$namespace.'/*');
             
             // Stock la nouvelle connexion à la base de donnée
             $this->{"db_$namespace"} = $this->load->database($namespace, TRUE);
