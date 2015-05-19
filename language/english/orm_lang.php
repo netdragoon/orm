@@ -2,9 +2,8 @@
 /**
  * SAG ORM (objet relationnel mapping)
  * @author Yoann VANITOU
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.12 (20150428)
+ * @license http://www.apache.org/licenses/LICENSE-2.0
+ * @link https://github.com/maltyxx/orm
  */
 
 $lang['orm_validation_email'] = "Le champ %s doit être un email valide";

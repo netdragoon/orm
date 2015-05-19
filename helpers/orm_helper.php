@@ -3,9 +3,8 @@
 /**
  * SAG ORM (objet relationnel mapping)
  * @author Yoann VANITOU
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.12 (20150428)
+ * @license http://www.apache.org/licenses/LICENSE-2.0
+ * @link https://github.com/maltyxx/orm
  */
 
 /**
@@ -14,8 +13,9 @@
  */
 function orm_autoload($class) {
 	if (strstr($class, '_model') !== FALSE) {
-		$file_path = str_replace('\\', '/', FCPATH.APPPATH.'models/'.$class.'.php');
-        
+        $path = (version_compare(CI_VERSION, '3.0.0') >= 0) ? APPPATH : FCPATH.APPPATH;
+		$file_path = str_replace('\\', '/', $path.'models/'.$class.'.php');
+                
 		if (is_file($file_path))
 			include_once($file_path);
 	}

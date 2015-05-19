@@ -1,11 +1,17 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+require(__DIR__.'/Orm_association.php');
+require(__DIR__.'/Orm_field.php');
+require(__DIR__.'/Orm_model.php');
+require(__DIR__.'/Orm_primary_key.php');
+require(__DIR__.'/Orm_table.php');
+require(__DIR__.'/Orm_validation.php');
+
 /**
  * SAG ORM (objet relationnel mapping)
  * @author Yoann VANITOU
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.12 (20150428)
+ * @license http://www.apache.org/licenses/LICENSE-2.0
+ * @link https://github.com/maltyxx/orm
  */
 class Orm {
 

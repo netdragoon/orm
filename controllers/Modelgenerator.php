@@ -1,41 +1,56 @@
-<?php
-
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Willy & Case & Yoann
- * has_one      : un utilisateur n'a qu'une nationnalité (id_nationnalité dans users)
- * has_many     : un groupe a plusieurs membres
- * belongs_to   : plusieurs vidéos appartiennent à une utilisateur (id_user dans users_videos)
- * @version 3.2.12 (20150311)
+ * SAG ORM (objet relationnel mapping)
+ * @author Willy
+ * @author Case
+ * @author Yoann VANITOU <yvanitou@gmail.com>
+ * @license http://www.apache.org/licenses/LICENSE-2.0
+ * @link https://github.com/maltyxx/orm
  */
 class Modelgenerator extends CI_Controller {
-
+    
     private $override = array();
     private $association = array();
     private $model_output = '';
+    private $app_path = '';
 
     const STARTCODE2KEEP = "//--START_PERSISTANT_CODE";
     const ENDCODE2KEEP = "//--END_PERSISTANT_CODE";
-
+    
+    /**
+     * Contructeur
+     */
     public function __construct() {
-        ini_set("memory_limit", "-1");
-        set_time_limit(0);
-
         parent::__construct();
-
+        
+        // Si le script n'est pas exécuté en PHP CLI
+        if (!$this->input->is_cli_request()) {
+            //exit("Le script doit être exécuté en CLI (Ex: #php index.php modelgenerator index)");
+        }
+        
+        // Paquet(s)
         $this->load->helper("text");
     }
-
+    
+    /**
+     * Point d'entré
+     */
     public function index() {
         $this->run();
     }
-
+    
+    /**
+     * Configuration
+     * @return array $db
+     */
     private function _config() {
+        // Chemin de l'application
+        $this->app_path = (version_compare(CI_VERSION, '3.0.0') >= 0) ? APPPATH : FCPATH.APPPATH;
+        
         // Fichier de configuration des bases de données
-        $file_db_env = APPPATH.'config/'.ENVIRONMENT.'/database.php';
-        $file_db = APPPATH.'config/database.php';
+        $file_db_env = $this->app_path.'config/'.ENVIRONMENT.'/database.php';
+        $file_db = $this->app_path.'config/database.php';
         $file_path = (file_exists($file_db_env)) ? $file_db_env : $file_db;
 
         // Inclusion de la configuration
@@ -44,7 +59,12 @@ class Modelgenerator extends CI_Controller {
         // Retourne la configuration
         return $db;
     }
-
+    
+    /**
+     * Création d'un répertoire
+     * @param string $dir
+     * @return boolean
+     */
     private function _dir($dir) {
         if (!file_exists($dir)) {
             if (!mkdir($dir, 0755)) {
@@ -54,7 +74,10 @@ class Modelgenerator extends CI_Controller {
 
         return TRUE;
     }
-
+    
+    /**
+     * Sauvegarde les surcharges des modèles
+     */
     private function _save_override($dir) {
 
         echo '<pre>';
@@ -77,7 +100,7 @@ class Modelgenerator extends CI_Controller {
                     $this->override[$file] = "\r\n\t".self::STARTCODE2KEEP.($override).self::ENDCODE2KEEP."\r\n";
                 }
 
-                echo "Suppression du fichier <b>$file</b> du répertoire $path";
+                echo "Suppression du fichier <b>$file</b> du répertoire $path : ";
 
                 if (unlink($file_path)) {
                     echo '<b style="color:green">OK</b><br />';
@@ -87,7 +110,10 @@ class Modelgenerator extends CI_Controller {
             }
         }
     }
-
+    
+    /**
+     * Génère les associations
+     */
     private function _association_many($namespace) {
         $relation_inverse = array(
             "belongs_to" => "has_many",
@@ -103,9 +129,9 @@ class Modelgenerator extends CI_Controller {
         foreach ($query_table->result_array() as $table) {
             // création des relations (clés étrangères d'inno db préalablement définies en base)
             $sql = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
-									FROM information_schema.KEY_COLUMN_USAGE
-									WHERE CONSTRAINT_NAME != "PRIMARY"
-										AND  TABLE_NAME = "'.$table['Name'].'"';
+                FROM information_schema.KEY_COLUMN_USAGE
+                WHERE CONSTRAINT_NAME != "PRIMARY"
+                    AND  TABLE_NAME = "'.$table['Name'].'"';
 
             $query_relations = $this->{"db_$namespace"}->query($sql);
 
@@ -147,7 +173,10 @@ class Modelgenerator extends CI_Controller {
 
         echo '<hr />';
     }
-
+    
+    /**
+     * Création des modèles d'une base de donée
+     */
     private function _create_model($namespace) {
         $relations_comments = array();
 
@@ -163,7 +192,10 @@ class Modelgenerator extends CI_Controller {
             $this->_append("\r\n");
             $this->_append("if ( ! defined('BASEPATH')) exit('No direct script access allowed');\r\n");
             $this->_append("\r\n");
-            $this->_append("class {$table['Name']}_model extends \Orm_model {\r\n");
+            
+            $class_name = $table['Name']."_model";
+            
+            $this->_append("class $class_name extends \Orm_model {\r\n");
 
             // GESTION DES CONSTANTES
             // on regarde si dans la table il y a la colonne constant
@@ -326,7 +358,7 @@ class Modelgenerator extends CI_Controller {
             /*    ECRITURE DES RELATIONS                */
             /* ---------------------------------------- */
             // création des relations (clés étrangères d'inno db préalablement définies en base)
-            $sql_foreign_keys = 'SELECT DISTINCT(CONSTRAINT_NAME),TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
+            $sql_foreign_keys = 'SELECT DISTINCT(CONSTRAINT_NAME), TABLE_NAME, COLUMN_NAME,REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
                                     FROM information_schema.KEY_COLUMN_USAGE
                                     WHERE CONSTRAINT_NAME != "PRIMARY"
                                         AND  TABLE_NAME = "'.$table['Name'].'"';
@@ -380,26 +412,26 @@ class Modelgenerator extends CI_Controller {
                 $this->_append($relations_javadoc_buffer);
                 $this->_append($relations_buffer);
             }
-
-            $filename = $table['Name'].'_model.php';
+                        
+            $file_name = $table['Name'].'_model.php';
 
             // Si il exite un override
-            if (!empty($this->override[$filename])) {
-                $this->_append($this->override[$filename]);
+            if (!empty($this->override[$file_name])) {
+                $this->_append($this->override[$file_name]);
             }
 
             $this->_append('}'."\r\n");
             $this->_append("\r\n");
-
-            $file_path = FCPATH.APPPATH.'models/'.$namespace.'/'.$filename;
-
+               
+            $file_path = $this->app_path.'models/'.$namespace.'/'.$file_name;
+            
             if (touch($file_path)) {
                 file_put_contents($file_path, $this->model_output);
                 chmod($file_path, 0644);
 
-                echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:green">OK</b><br />';
+                echo 'Creation du fichier : <b>'.$file_name.'</b> : <b style="color:green">OK</b><br />';
             } else {
-                echo 'Creation du fichier : <b>'.$filename.'</b> : <b style="color:red">KO</b><br />';
+                echo 'Creation du fichier : <b>'.$file_name.'</b> : <b style="color:red">KO</b><br />';
             }
         }
 
@@ -409,7 +441,10 @@ class Modelgenerator extends CI_Controller {
         echo '<hr />';
         echo '<h2>DONE ;)</h2>';
     }
-
+    
+    /**
+     * Exécute le script
+     */
     public function run() {
         $config = $this->_config();
 
@@ -417,11 +452,11 @@ class Modelgenerator extends CI_Controller {
             echo "<h1>Base de donnée <strong>$namespace</strong></h1><br />";
             
             // Création du répertoire
-            $this->_dir(APPPATH.'models/'.$namespace);
+            $this->_dir($this->app_path.'models/'.$namespace);
 
             // Récupère les données des anciens modèles
-            $this->_save_override(APPPATH.'models/'.$namespace.'/*');
-
+            $this->_save_override($this->app_path.'models/'.$namespace.'/*');
+            
             // Stock la nouvelle connexion à la base de donnée
             $this->{"db_$namespace"} = $this->load->database($namespace, TRUE);
 
@@ -435,11 +470,20 @@ class Modelgenerator extends CI_Controller {
             $this->output->enable_profiler(TRUE);
         }
     }
-
+    
+    /**
+     * Contenu d'un modèle
+     * @param string $output
+     */
     private function _append($output) {
         $this->model_output .= $output;
     }
-
+    
+    /**
+     * Génère le nom d'une constante
+     * @param string $chaine
+     * @return string
+     */
     private function _strtoconstante($chaine) {
         $chaine = trim($chaine);
         $chaine = convert_accented_characters($chaine);

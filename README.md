@@ -1,15 +1,34 @@
-# sag-orm
-object-relational mapping for Codeigniter
+# ORM
+object-relational mapping for Codeigniter 2 and Codeigniter 3
 
 ## Installation
-### Step 1
+### Step 1 Installation by Composer
 ```txt
-Copy file /controllers/modelgenerator.php > /application/controllers/modelgenerator.php:
-Copy file /language/english/orm_lang.php > /application/language/english/orm_lang.php:
-Copy file /helpers/orm_helper.php > /application/helpers/orm_helper.php:
+# composer install maltyxx/orm
 ```
 
-### Step 2 Configuration database
+### Step 2 Create files
+```txt
+/application/controllers/Modelgenerator.php for CodeIgniter 3
+/application/controllers/modelgenerator.php for CodeIgniter 2
+```
+```php
+<?php require(APPPATH.'/libraries/Orm/controllers/Modelgenerator.php');
+```
+```txt
+/application/helpers/orm_helper.php
+```
+```php
+<?php require(APPPATH.'/libraries/Orm/helpers/orm_helper.php');
+```
+```txt
+/application/language/english/orm_lang.php
+```
+```php
+<?php require(APPPATH.'/libraries/Orm/language/english/orm_lang.php');
+```
+
+### Step 3 Configuration database
 Configuration /application/config/database.php
 
 ```php
@@ -30,7 +49,7 @@ $db['databasename']['autoinit'] = TRUE;
 $db['databasename']['stricton'] = FALSE;
 ```
 
-### Step 3 Model Generator
+### Step 4 Model Generator
 #### Method CLI
 ```bash
 php index.php modelgenerator index

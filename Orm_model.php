@@ -3,9 +3,8 @@
 /**
  * SAG ORM (objet relationnel mapping)
  * @author Yoann VANITOU
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @link https://github.com/maltyxx/sag-orm
- * @version 3.2.12 (20150428)
+ * @license http://www.apache.org/licenses/LICENSE-2.0
+ * @link https://github.com/maltyxx/orm
  */
 class Orm_model extends Orm {
     
@@ -50,7 +49,7 @@ class Orm_model extends Orm {
      * @var interger 
      */
     protected $_tts = 0;
-
+    
     /**
      * Constructeur
      * @param NULL|int|Orm_association $data
@@ -82,7 +81,7 @@ class Orm_model extends Orm {
     /**
      * Configuration par défaut
      */
-    protected function _config() {
+    protected function _config() {        
         // Configuration du cache par défaut
         $this->_cache = parent::$config['cache'];
         $this->_tts = parent::$config['tts'];
@@ -92,7 +91,7 @@ class Orm_model extends Orm {
         $this->_namespace = $namespace[0];
         
         // Génère la configuration des champs
-        if (isset(static::$fields)) {        
+        if (isset(static::$fields)) {
             foreach (static::$fields as $field)
                 $this->_config['fields'][$field['name']] = $field;
         }
@@ -115,11 +114,11 @@ class Orm_model extends Orm {
      */
     protected function _connect() {
         $db = "db_$this->_namespace";
-                
-        // Si il exite une connxion		
+                        
+        // Si il exite une connxion
         if ( ! isset(parent::$CI->{$db})) {
             // Charge la librairie
-            parent::$CI->{$db} =& parent::$CI->load->database($this->_namespace, TRUE, TRUE);
+            parent::$CI->{$db} = parent::$CI->load->database($this->_namespace, TRUE, TRUE);
             
             // Initialise la connexion
             parent::$CI->{$db}->initialize();
@@ -411,7 +410,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where($key, $value = NULL, $escape = TRUE) {
-        return $this->_db->where($key, $value, $escape);
+        // Exécute la commande
+        $this->_db->where($key, $value, $escape);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -422,7 +425,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_where($key, $value = NULL, $escape = TRUE) {
-        return $this->_db->or_where($key, $value, $escape);
+        // Exécute la commande
+        $this->_db->or_where($key, $value, $escape);
+        
+        // Retourne l'instance
+        return $this;
     }
 
     /**
@@ -433,7 +440,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where_in($key = NULL, $values = NULL) {
-        return $this->_db->where_in($key, $values);
+        // Exécute la commande
+        $this->_db->where_in($key, $values);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -444,7 +455,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function where_not_in($key = NULL, $values = NULL) {
-        return $this->_db->where_not_in($key, $values);
+        // Exécute la commande
+        $this->_db->where_not_in($key, $values);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -455,7 +470,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_where_not_in($key = NULL, $values = NULL) {
-        return $this->_db->or_where_not_in($key, $values);
+        // Exécute la commande
+        $this->_db->or_where_not_in($key, $values);
+        
+        // Retourne l'instance
+        return $this;
     }
 
     /**
@@ -466,7 +485,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function like($field, $match = '', $side = 'both') {
+        // Exécute la commande
         return $this->_db->like($field, $match, $side);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -477,7 +500,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_like($field, $match = '', $side = 'both') {
-        return $this->_db->or_like($field, $match, $side);
+        // Exécute la commande
+        $this->_db->or_like($field, $match, $side);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -488,7 +515,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function not_like($field, $match = '', $side = 'both') {
-        return $this->_db->or_like($field, $match, $side);
+        // Exécute la commande
+        $this->_db->or_like($field, $match, $side);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -499,25 +530,24 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_not_like($field, $match = '', $side = 'both') {
-        return $this->_db->or_not_like($field, $match, $side);
+        // Exécute la commande
+        $this->_db->or_not_like($field, $match, $side);
+        
+        // Retourne l'instance
+        return $this;
     }
     
-    /**
-     * Génère un WHERE personnalisé en SQL
-     * @param mixe $sql
-     * @return Orm_model
-     */
-    public function sql($sql) {
-        return $this->_db->where($sql, NULL, FALSE);
-    }
-
     /**
      * Génère un GROUP BY en SQL
      * @param string $by
      * @return Orm_model
      */
     public function group_by($by) {
-        return $this->_db->group_by($by);
+        // Exécute la commande
+        $this->_db->group_by($by);
+        
+        // Retourne l'instance
+        return $this;
     }
 
     /**
@@ -528,7 +558,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function having($key, $value = '', $escape = TRUE) {
-        return $this->_db->having($key, $value, $escape);
+        // Exécute la commande
+        $this->_db->having($key, $value, $escape);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -539,7 +573,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function or_having($key, $value = '', $escape = TRUE) {
-        return $this->_db->or_having($key, $value, $escape);
+        // Exécute la commande
+        $this->_db->or_having($key, $value, $escape);
+        
+        // Retourne l'instance
+        return $this;
     }
 
     /**
@@ -549,7 +587,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function order_by($orderby, $direction = '') {
-        return $this->_db->order_by($orderby, $direction);
+        // Exécute la commande
+        $this->_db->order_by($orderby, $direction);
+        
+        // Retourne l'instance
+        return $this;
     }
 
     /**
@@ -559,7 +601,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function limit($value, $offset = '') {
-        return $this->_db->limit($value, $offset);
+        // Exécute la commande
+        $this->_db->limit($value, $offset);
+        
+        // Retourne l'instance
+        return $this;
     }
     
     /**
@@ -568,7 +614,11 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     public function offset($offset) {
-        return $this->_db->offset($offset);
+        // Exécute la commande
+        $this->_db->offset($offset);
+        
+        // Retourne l'instance
+        return $this;
     }
 
     /**
@@ -626,7 +676,7 @@ class Orm_model extends Orm {
             // Retoune les résultats en cache
             return $result;
         }
-
+        
         // Retourne les résultats sans cache
         return $this->_db->get()->result_array();
     }
@@ -636,7 +686,7 @@ class Orm_model extends Orm {
      * @return array
      */
     public function find() {
-        // Répuère les objets        
+        // Répuère les objets
         $objects = $this->_convert_all($this->_result());
 
         // Si aucun résultat trouvé
@@ -839,7 +889,9 @@ class Orm_model extends Orm {
      * @return Orm_model
      */
     protected function _primary_key_find(Orm_primary_key $primary_key) {
-
+        
+        
+        
         $object = $this->where($primary_key->name, $primary_key->value)->find_one();
         
         // Si l'object existe
