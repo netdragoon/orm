@@ -68,6 +68,9 @@ http://site/index.php?/modelgenerator/index
 ## Config ORM
 /application/config/orm.php:
 ```php
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
 $config['orm'] = array(
     'cache' => FALSE,
     'tts' => 3600,
@@ -76,6 +79,7 @@ $config['orm'] = array(
     'encryption_enable' => FALSE, // MySQL 5.6 minimum
     'encryption_key' => "" // MySQL 5.6 minimum
 );
+
 ```
 
 ## Examples
