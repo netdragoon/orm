@@ -13,25 +13,29 @@ Object Relational Mapping for Codeigniter 2 and Codeigniter 3
 /application/controllers/modelgenerator.php for CodeIgniter 2
 ```
 ```php
-<?php require(APPPATH.'/libraries/Orm/controllers/Modelgenerator.php');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+require(APPPATH.'/libraries/Orm/controllers/Modelgenerator.php');
 ```
 ```txt
 /application/helpers/orm_helper.php
 ```
 ```php
-<?php require(APPPATH.'/libraries/Orm/helpers/orm_helper.php');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+require(APPPATH.'/libraries/Orm/helpers/orm_helper.php');
 ```
 ```txt
 /application/language/english/orm_lang.php
 ```
 ```php
-<?php require(APPPATH.'/libraries/Orm/language/english/orm_lang.php');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+require(APPPATH.'/libraries/Orm/language/english/orm_lang.php');
 ```
 ```txt
 /application/libraries/Orm.php
 ```
 ```php
-<?php require(__DIR__.'/Orm/Orm.php');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+require(__DIR__.'/Orm/Orm.php');
 ```
 
 ### Step 3 Configuration database
