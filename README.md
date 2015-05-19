@@ -1,5 +1,5 @@
 # ORM
-object-relational mapping for Codeigniter 2 and Codeigniter 3
+Object Relational Mapping for Codeigniter 2 and Codeigniter 3
 
 ## Installation
 ### Step 1 Installation by Composer
