@@ -68,8 +68,7 @@ http://site/index.php?/modelgenerator/index
 ## Config ORM
 /application/config/orm.php:
 ```php
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
 $config['orm'] = array(
     'cache' => FALSE,
@@ -85,6 +84,8 @@ $config['orm'] = array(
 ## Examples
 /application/controllers/exemple.php:
 ```php
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Welcome extends CI_Controller {
 
     public function __construct() {
