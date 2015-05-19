@@ -35,7 +35,7 @@ require(APPPATH.'/libraries/Orm/language/english/orm_lang.php');
 ```
 ```php
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-require(__DIR__.'/Orm/Orm.php');
+require(APPPATH.'/libraries/Orm/Orm.php');
 ```
 
 ### Step 3 Configuration database
