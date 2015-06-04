@@ -98,7 +98,7 @@ class Welcome extends CI_Controller {
     
     public function index() {
         // ---------- Chargement de la library
-        $this->load->library('Orm/orm');
+        $this->load->library('orm');
         
         // ------------------------------------------------------------------
 
