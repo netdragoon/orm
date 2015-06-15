@@ -3,8 +3,17 @@ Object Relational Mapping for Codeigniter 2 and Codeigniter 3
 
 ## Installation
 ### Step 1 Installation by Composer
-```txt
-# composer install maltyxx/orm
+#### Edit /composer.json
+```json
+{
+    "require": {
+        "maltyxx/orm": "3.3.*"
+    }
+}
+```
+#### Run composer update
+```shell
+composer update
 ```
 
 ### Step 2 Create files
