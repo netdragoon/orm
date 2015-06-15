@@ -22,28 +22,32 @@ composer update
 /application/controllers/modelgenerator.php for CodeIgniter 2
 ```
 ```php
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 require(APPPATH.'/libraries/Orm/controllers/Modelgenerator.php');
 ```
 ```txt
 /application/helpers/orm_helper.php
 ```
 ```php
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 require(APPPATH.'/libraries/Orm/helpers/orm_helper.php');
 ```
 ```txt
 /application/language/english/orm_lang.php
 ```
 ```php
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 require(APPPATH.'/libraries/Orm/language/english/orm_lang.php');
 ```
 ```txt
 /application/libraries/Orm.php
 ```
 ```php
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 require(APPPATH.'/libraries/Orm/Orm.php');
 ```
 
@@ -51,21 +55,28 @@ require(APPPATH.'/libraries/Orm/Orm.php');
 Configuration /application/config/database.php
 
 ```php
-$db['databasename']['hostname'] = 'localhost';
-$db['databasename']['username'] = '';
-$db['databasename']['password'] = '';
-$db['databasename']['database'] = '';
-$db['databasename']['databaseriver'] = 'mysql';
-$db['databasename']['dbprefix'] = '';
-$db['databasename']['pconnect'] = TRUE;
-$db['databasename']['db_debug'] = TRUE;
-$db['databasename']['cache_on'] = FALSE;
-$db['databasename']['cachedir'] = '';
-$db['databasename']['char_set'] = 'utf8';
-$db['databasename']['dbcollat'] = 'utf8_general_ci';
-$db['databasename']['swap_pre'] = '';
-$db['databasename']['autoinit'] = TRUE;
-$db['databasename']['stricton'] = FALSE;
+$db['databasename'] = array(
+	'dsn'	=> '',
+	'hostname' => 'localhost',
+	'username' => '',
+	'password' => '',
+	'database' => '',
+	'dbdriver' => 'mysqli',
+	'dbprefix' => '',
+	'pconnect' => FALSE,
+	'db_debug' => TRUE,
+	'cache_on' => FALSE,
+	'cachedir' => '',
+	'char_set' => 'utf8',
+	'dbcollat' => 'utf8_general_ci',
+	'swap_pre' => '',
+	'encrypt' => FALSE,
+	'compress' => FALSE,
+	'stricton' => FALSE,
+	'failover' => array(),
+	'save_queries' => TRUE
+);
+
 ```
 
 ### Step 4 Model Generator
@@ -81,7 +92,8 @@ http://site/index.php?/modelgenerator/index
 ## Config ORM
 /application/config/orm.php:
 ```php
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
 $config['orm'] = array(
     'cache' => FALSE,
@@ -97,7 +109,8 @@ $config['orm'] = array(
 ## Examples
 /application/controllers/exemple.php:
 ```php
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Welcome extends CI_Controller {
 
@@ -197,5 +210,4 @@ class Welcome extends CI_Controller {
     }
 
 }
-
 ```
