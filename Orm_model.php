@@ -486,7 +486,7 @@ class Orm_model extends Orm {
      */
     public function like($field, $match = '', $side = 'both') {
         // Exécute la commande
-        return $this->_db->like($field, $match, $side);
+        $this->_db->like($field, $match, $side);
         
         // Retourne l'instance
         return $this;
