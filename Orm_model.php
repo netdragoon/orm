@@ -196,11 +196,12 @@ class Orm_model extends Orm {
         // on boucle sur tous les champs de la table
         foreach ($data as $name => $value) {
             // Si la configuration n'existe pas
-            if (($config = $this->_get_config_field($name)) === FALSE)
+            if (!isset($this->_config['fields'][$name])) {
                 continue;
+            }
 
             // Initialise l'objet champ
-            $orm_field = new Orm_field($config, $value);
+            $orm_field = new Orm_field($this->_config['fields'][$name], $value);
                         
             // Si c'est un champ qu'on doit crypter
             if (parent::$config['encryption_enable'] && $orm_field->encrypt) {
@@ -341,11 +342,12 @@ class Orm_model extends Orm {
      */
     public function _convert($name, $value) {
         // Si la configuration n'existe pas
-        if (($config = $this->_get_config_field($name)) === FALSE)
-            return $config;
+        if (!isset($this->_config['fields'][$name])) {
+            return FALSE;
+        }
 
         // Initialise l'objet
-        $orm_field = new Orm_field($config, $value);
+        $orm_field = new Orm_field($this->_config['fields'][$name], $value);
 
         // Convertie la valeur du champ
         $this->_data[$orm_field->name] = $orm_field->convert();
