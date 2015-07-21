@@ -25,7 +25,7 @@ class Orm {
      * Version de l'ORM
      * @var string 
      */
-    protected $version = '3.3.3';
+    protected $version = '3.3.4';
 
     /**
      * Configuration de l'ORM
