@@ -1,6 +1,9 @@
 # ORM
 Object Relational Mapping for Codeigniter 2 and Codeigniter 3
 
+#We recommend using `Origami` project :
+https://github.com/maltyxx/origami
+
 ## Installation
 ### Step 1 Installation by Composer
 #### Edit /composer.json
