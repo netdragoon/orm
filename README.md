@@ -1,7 +1,7 @@
 # ORM
 Object Relational Mapping for Codeigniter 2 and Codeigniter 3
 
-##`The project is no longer maintained we recommend using Origami project https://github.com/maltyxx/origami.`
+##The project is no longer maintained we recommend using Origami project https://github.com/maltyxx/origami.
 
 ## Installation
 ### Step 1 Installation by Composer
